@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery History - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/request.css">
+</head>
+<body data-required-role="DELIVERY,ADMIN">
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg app-navbar navbar-dark sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EmergencyMed</span>
+        <span class="brand-badge">Courier Hub</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="appNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/index.html"><i class="bi bi-house-door"></i> Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/new.html"><i class="bi bi-plus-circle text-danger"></i> New Request</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/my-requests.html"><i class="bi bi-clock-history"></i> My Requests</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pharmacy/requests.html"><i class="bi bi-shop"></i> Pharmacy</a></li>
+          <li class="nav-item"><a class="nav-link" href="/delivery/jobs.html"><i class="bi bi-bicycle"></i> Delivery Console</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/delivery/history.html"><i class="bi bi-card-checklist"></i> Finished Jobs</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/requests.html"><i class="bi bi-shield-lock"></i> Admin</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/notifications.html" class="nav-link position-relative text-white p-2" title="Notifications">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="navbar-notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.7rem;">0</span>
+          </a>
+          <div class="text-light small text-end d-none d-sm-block">
+            <div id="navbar-user-display" class="fw-semibold">Delivery Partner</div>
+            <div class="text-teal" style="font-size: 0.75rem;">Verified Courier</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="py-4">
+    <div class="container-fluid px-lg-4" style="max-width: 1100px;">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-teal text-white text-uppercase fw-bold"><i class="bi bi-clock-history me-1"></i> Fulfilled Log</span>
+            <h2 class="fw-bold mb-0 text-navy">Delivery Job History</h2>
+          </div>
+          <p class="text-muted small mb-0">Record of all completed emergency dispatches with verified handover receipts.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/delivery/jobs.html" class="btn btn-outline-teal btn-sm">
+            <i class="bi bi-bicycle"></i> Back to Live Console
+          </a>
+          <button class="btn btn-teal btn-sm" onclick="deliveryApp.loadHistory(currentPage)">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Nav Pills -->
+      <div class="d-flex gap-2 mb-4">
+        <a href="/delivery/jobs.html" class="btn btn-sm btn-outline-secondary fw-semibold">
+          <i class="bi bi-speedometer2"></i> Active Console & Offers
+        </a>
+        <a href="/delivery/history.html" class="btn btn-sm btn-teal fw-semibold">
+          <i class="bi bi-clock-history"></i> Delivery History
+        </a>
+      </div>
+
+      <!-- History Table Card -->
+      <div class="card app-card shadow-sm mb-4">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase">
+              <tr>
+                <th>Reference Code</th>
+                <th>Completed Time</th>
+                <th>Patient Name</th>
+                <th>Destination Address</th>
+                <th>Delivery Fee</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="delivery-history-table-body">
+              <tr><td colspan="7" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading delivery history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-muted small" id="history-page-info">Showing finished deliveries</span>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" id="btn-prev-page" onclick="changePage(-1)" disabled>
+            <i class="bi bi-chevron-left"></i> Previous
+          </button>
+          <button class="btn btn-outline-secondary" id="btn-next-page" onclick="changePage(1)">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="mt-auto">
+    <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+      <div>&copy; 2026 EmergencyMed Courier Network &bull; Module 4</div>
+      <div class="small text-muted">Courier Commission & Payout Records</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/notifications.js"></script>
+  <script src="/assets/js/delivery.js"></script>
+  <script>
+    let currentPage = 0;
+
+    function changePage(delta) {
+      if (currentPage + delta >= 0) {
+        currentPage += delta;
+        deliveryApp.loadHistory(currentPage);
+        document.getElementById('btn-prev-page').disabled = currentPage === 0;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Dashboard - Emergency Medicine Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div id="main-navbar"></div>
+
+  <main class="container py-5">
+    <!-- Welcome Header -->
+    <div class="card-premium p-4 mb-4 bg-white border-0 shadow-sm">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge badge-role badge-role-patient mb-2">Patient Portal</span>
+          <h2 class="fw-bold mb-1">Welcome back, <span id="user-name">Patient</span></h2>
+          <p class="text-muted small mb-0">Emergency medicine availability and home dispatch network</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/search.html" class="btn btn-teal px-4 fw-bold">
+            <i class="bi bi-search me-1"></i> Find Medicine Near Me
+          </a>
+          <a href="/request/new.html" class="btn btn-emergency px-4 fw-bold">
+            <i class="bi bi-plus-circle me-1"></i> Emergency Request
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Main Cards from Page 3 -->
+    <div class="row g-4">
+      <!-- Card 1: Find Medicine -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card-premium card-interactive h-100 p-4 border-0" onclick="window.location.href='/search.html'">
+          <div class="d-inline-flex p-3 rounded-circle text-teal mb-3" style="background:#CCFBF1; color:#0D9488;">
+            <i class="bi bi-geo-alt-fill fs-2"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Find Medicine</h5>
+          <p class="text-muted small mb-3">
+            Search nearby verified pharmacies by distance, real-time availability, and operating hours.
+          </p>
+          <span class="text-teal fw-bold small">Launch Search Engine &rarr;</span>
+        </div>
+      </div>
+
+      <!-- Card 2: My Requests (GET /requests/summary) -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card-premium card-interactive h-100 p-4 border-0" onclick="window.location.href='/request/my-requests.html'">
+          <div class="d-inline-flex p-3 rounded-circle text-primary mb-3" style="background:#EEF2FF; color:#4338CA;">
+            <i class="bi bi-clock-history fs-2"></i>
+          </div>
+          <h5 class="fw-bold mb-2">My Requests</h5>
+          <div class="d-flex align-items-baseline gap-2 mb-2">
+            <h3 class="fw-bold mb-0" id="req-count">0</h3>
+            <span class="text-muted small">active orders</span>
+          </div>
+          <p class="text-muted small mb-3" id="req-status-text">
+            Track live dispatch status, courier assignment, and pharmacy fulfillment.
+          </p>
+          <span class="text-primary fw-bold small">View Request History &rarr;</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Notifications -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card-premium card-interactive h-100 p-4 border-0" onclick="window.location.href='/notifications.html'">
+          <div class="d-inline-flex p-3 rounded-circle text-warning mb-3" style="background:#FEF3C7; color:#B45309;">
+            <i class="bi bi-bell-fill fs-2"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Notifications</h5>
+          <div class="d-flex align-items-baseline gap-2 mb-2">
+            <h3 class="fw-bold mb-0">1</h3>
+            <span class="text-muted small">unread alert</span>
+          </div>
+          <p class="text-muted small mb-3">
+            Live alerts regarding prescription approvals, driver dispatch, and network updates.
+          </p>
+          <span class="text-warning fw-bold small">Check Notifications &rarr;</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Profile -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card-premium card-interactive h-100 p-4 border-0" onclick="window.location.href='/profile.html'">
+          <div class="d-inline-flex p-3 rounded-circle text-success mb-3" style="background:#DCFCE7; color:#15803D;">
+            <i class="bi bi-person-circle fs-2"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Profile & Location</h5>
+          <p class="text-muted small mb-3">
+            Keep your address, GPS delivery coordinates, blood group, and emergency contact up to date.
+          </p>
+          <span class="text-success fw-bold small">Manage Settings &rarr;</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Medicine Catalog Preview -->
+    <div class="card-premium p-4 mt-5 bg-white border-0">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-capsule me-2 text-teal"></i> Common Emergency Medicines</h5>
+        <a href="/medicine-catalogue.html" class="btn btn-outline-teal btn-sm">Full Catalog</a>
+      </div>
+      <div class="row g-3" id="med-list">
+        <div class="col-12 text-center text-muted py-3">Loading medicines catalog...</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await AuthGuard.init(['PATIENT']);
+      if (!user) return;
+
+      document.getElementById('user-name').textContent = user.fullName;
+
+      // Load request summary from Module 4
+      try {
+        const reqSummary = await Api.get('/api/v1/requests/summary');
+        document.getElementById('req-count').textContent = reqSummary.activeRequests || '0';
+        if (reqSummary.isStub) {
+          document.getElementById('req-status-text').innerHTML = `<span class="badge bg-secondary-subtle text-secondary small">Connected to Module 4 (Anusuya)</span>`;
+        }
+      } catch (e) {
+        // Fallback placeholder without error
+        document.getElementById('req-count').textContent = '0';
+      }
+
+      // Load featured medicines
+      try {
+        const meds = await Api.get('/api/v1/medicines/featured');
+        const container = document.getElementById('med-list');
+        container.innerHTML = meds.map(m => `
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="d-block text-dark">${m.name}</strong>
+                <span class="text-muted small">${m.category} • ${m.strength}</span>
+              </div>
+              <span class="badge ${m.requiresPrescription ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'}">
+                ${m.requiresPrescription ? 'Rx Required' : 'OTC'}
+              </span>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        // fail gracefully
+      }
+    });
+  </script>
+</body>
+</html>

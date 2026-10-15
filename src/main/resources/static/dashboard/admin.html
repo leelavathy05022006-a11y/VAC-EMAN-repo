@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Emergency Medicine Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div id="main-navbar"></div>
+
+  <main class="container py-5">
+    <!-- Header -->
+    <div class="card-premium p-4 mb-4 bg-white border-0 shadow-sm">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge badge-role badge-role-admin mb-2">Central Governance</span>
+          <h2 class="fw-bold mb-1">System Administration & Auditing</h2>
+          <p class="text-muted small mb-0">Overview of network participants, pharmacy licences, and verification queues</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/admin/pharmacy-approvals.html" class="btn btn-emergency fw-bold position-relative px-4">
+            <i class="bi bi-patch-check me-1"></i> Pharmacy Approvals
+            <span id="badge-pending-header" class="badge bg-white text-danger ms-2 d-none">0</span>
+          </a>
+          <a href="/admin/users.html" class="btn btn-primary fw-bold px-4">
+            <i class="bi bi-people me-1"></i> Manage Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert for Pending Approvals -->
+    <div id="pending-alert-banner" class="alert alert-danger d-none shadow-sm d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-exclamation-octagon-fill fs-3 text-danger"></i>
+        <div>
+          <strong class="d-block">Action Required: Pending Pharmacy Licences</strong>
+          <span class="small">There are <span id="pending-count-banner" class="badge bg-danger fs-6">0</span> pharmacy registration(s) awaiting regulatory verification before operating.</span>
+        </div>
+      </div>
+      <a href="/admin/pharmacy-approvals.html" class="btn btn-danger btn-sm px-3 fw-bold">Review Now</a>
+    </div>
+
+    <!-- Counter Cards Grid (From GET /admin/summary) -->
+    <div class="row g-4 mb-5">
+      <!-- Total Users -->
+      <div class="col-sm-6 col-lg-3">
+        <div class="card-premium p-4 border-0 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted fw-semibold small">Total Accounts</span>
+            <span class="p-2 rounded bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></span>
+          </div>
+          <h2 class="fw-extrabold mb-1" id="stat-total-users">--</h2>
+          <span class="text-muted small">Registered in system</span>
+        </div>
+      </div>
+
+      <!-- Pending Pharmacies with RED BADGE -->
+      <div class="col-sm-6 col-lg-3">
+        <div class="card-premium p-4 border-0 h-100 border-start border-4 border-danger">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-danger fw-semibold small">Pending Pharmacies</span>
+            <span class="badge bg-danger rounded-pill" id="badge-pending-stat">0</span>
+          </div>
+          <h2 class="fw-extrabold text-danger mb-1" id="stat-pending-pharmacies">--</h2>
+          <a href="/admin/pharmacy-approvals.html" class="text-danger small fw-bold text-decoration-none">Needs review &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Active Pharmacies -->
+      <div class="col-sm-6 col-lg-3">
+        <div class="card-premium p-4 border-0 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted fw-semibold small">Approved Pharmacies</span>
+            <span class="p-2 rounded bg-success-subtle text-success"><i class="bi bi-shop"></i></span>
+          </div>
+          <h2 class="fw-extrabold text-success mb-1" id="stat-approved-pharmacies">--</h2>
+          <span class="text-muted small">Live dispatch active</span>
+        </div>
+      </div>
+
+      <!-- Delivery Couriers -->
+      <div class="col-sm-6 col-lg-3">
+        <div class="card-premium p-4 border-0 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted fw-semibold small">Delivery Couriers</span>
+            <span class="p-2 rounded bg-warning-subtle text-warning"><i class="bi bi-bicycle"></i></span>
+          </div>
+          <h2 class="fw-extrabold mb-1" id="stat-delivery">--</h2>
+          <span class="text-muted small"><span id="stat-unverified-delivery">0</span> unverified</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Hub -->
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card-premium p-4 border-0 h-100 bg-white">
+          <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i> Pharmacy Verification Workflow</h5>
+          <p class="text-muted small mb-4">
+            Examine state drug license numbers, verify applicant shop addresses, inspect precise latitude and longitude pin coordinates with Google Maps direction paths, and issue formal Approve, Reject, or Suspend decisions.
+          </p>
+          <a href="/admin/pharmacy-approvals.html" class="btn btn-primary fw-bold">Open Approvals Queue</a>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card-premium p-4 border-0 h-100 bg-white">
+          <h5 class="fw-bold mb-3"><i class="bi bi-person-gear text-teal me-2"></i> User Directory & Access Controls</h5>
+          <p class="text-muted small mb-4">
+            Search patient records, verified hospitals, retail pharmacies, and delivery partners. Temporarily deactivate fraudulent accounts or authenticate driver's licences with a single click.
+          </p>
+          <a href="/admin/users.html" class="btn btn-teal fw-bold">Browse User Directory</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await AuthGuard.init(['ADMIN']);
+      if (!user) return;
+
+      try {
+        const summary = await Api.get('/api/v1/admin/summary');
+        document.getElementById('stat-total-users').textContent = summary.totalUsers;
+        document.getElementById('stat-pending-pharmacies').textContent = summary.pendingPharmaciesCount;
+        document.getElementById('stat-approved-pharmacies').textContent = summary.approvedPharmaciesCount;
+        document.getElementById('stat-delivery').textContent = summary.deliveryPartnersCount;
+        document.getElementById('stat-unverified-delivery').textContent = summary.unverifiedDeliveryPartnersCount;
+
+        if (summary.pendingPharmaciesCount > 0) {
+          document.getElementById('pending-alert-banner').classList.remove('d-none');
+          document.getElementById('pending-count-banner').textContent = summary.pendingPharmaciesCount;
+          document.getElementById('badge-pending-header').textContent = summary.pendingPharmaciesCount;
+          document.getElementById('badge-pending-header').classList.remove('d-none');
+          document.getElementById('badge-pending-stat').textContent = `${summary.pendingPharmaciesCount} Pending`;
+        }
+      } catch (err) {
+        UI.showToast(err.message, 'danger');
+      }
+    });
+  </script>
+</body>
+</html>

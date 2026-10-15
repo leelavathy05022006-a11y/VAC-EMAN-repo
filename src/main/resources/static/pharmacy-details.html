@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy Profile & Inventory Details | EmergencyMed</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5.3 CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/search.css">
+  <link rel="stylesheet" href="assets/css/chatbot.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="app-navbar py-2">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="navbar-brand" href="search.html">
+        <i class="bi bi-heart-pulse-fill text-danger"></i>
+        <span>EmergencyMed</span>
+      </a>
+      <a href="search.html" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-arrow-left me-1"></i> Back to Search
+      </a>
+    </div>
+  </header>
+
+  <!-- Details Content -->
+  <main class="container py-4">
+    <div class="mb-3">
+      <a href="javascript:history.back()" class="text-decoration-none text-muted font-weight-medium small">
+        <i class="bi bi-chevron-left me-1"></i> Back to Search Results
+      </a>
+    </div>
+
+    <div id="details-loading" class="text-center py-5">
+      <div class="spinner-border text-teal" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted mt-2">Loading pharmacy details...</p>
+    </div>
+
+    <div id="details-container" class="d-none">
+      
+      <!-- Pharmacy Header Card -->
+      <div class="card-surface p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <h2 class="font-weight-bold text-navy mb-1" id="pharmacy-name">—</h2>
+              <span class="badge bg-success" id="approved-badge">Approved Pharmacy</span>
+              <span id="data-source-badge" class="badge-demo">SAMPLE</span>
+            </div>
+            <p class="text-muted mb-2" id="pharmacy-address">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i> —
+            </p>
+            <div class="d-flex gap-3 align-items-center flex-wrap">
+              <span class="small font-weight-semibold" id="distance-info">—</span>
+              <span class="small font-weight-semibold text-muted" id="eta-info">—</span>
+              <span class="badge" id="open-status-badge">—</span>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" id="btn-details-call">
+              <i class="bi bi-telephone-fill me-1"></i> Call Pharmacy
+            </button>
+            <button class="btn btn-outline-success" id="btn-details-whatsapp">
+              <i class="bi bi-whatsapp me-1"></i> WhatsApp
+            </button>
+            <button class="btn btn-teal" id="btn-details-navigate">
+              <i class="bi bi-compass-fill me-1"></i> Navigate (Maps)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medicine Offer Section -->
+      <div class="card-surface p-4 mb-4" id="offer-card">
+        <h4 class="font-weight-bold text-navy mb-3">
+          <i class="bi bi-capsule me-2 text-teal"></i> Medicine Availability & Pricing
+        </h4>
+
+        <div id="prescription-alert" class="prescription-warning mb-3 d-none">
+          <i class="bi bi-exclamation-octagon-fill"></i> Prescription Required: Physical prescription or verified doctor slip required upon dispensing.
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded">
+              <small class="text-muted d-block">Available Stock</small>
+              <span class="h4 font-weight-bold text-success mb-0" id="stock-units">—</span>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded">
+              <small class="text-muted d-block">Unit Price</small>
+              <span class="h4 font-weight-bold text-navy mb-0" id="unit-price">—</span>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded">
+              <small class="text-muted d-block">Total Price (Requested Qty)</small>
+              <span class="h4 font-weight-bold text-primary mb-0" id="total-price">—</span>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="p-3 bg-light rounded">
+              <small class="text-muted d-block">Batch & Expiry</small>
+              <span class="font-weight-bold text-dark mb-0 d-block" id="batch-expiry">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top" id="request-actions-container">
+          <!-- Populated dynamically with delivery and pickup buttons -->
+        </div>
+      </div>
+
+      <!-- Operating Hours & Delivery Settings Card -->
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card-surface p-4 h-100">
+            <h5 class="font-weight-bold text-navy mb-3">
+              <i class="bi bi-clock-history me-2 text-teal"></i> Operating Hours
+            </h5>
+            <table class="table table-sm">
+              <tbody>
+                <tr>
+                  <td class="text-muted">Current Status</td>
+                  <td class="font-weight-bold" id="hours-status">—</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">Daily Schedule</td>
+                  <td class="font-weight-bold" id="hours-schedule">—</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">Timezone Reference</td>
+                  <td>Asia/Kolkata (IST)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card-surface p-4 h-100">
+            <h5 class="font-weight-bold text-navy mb-3">
+              <i class="bi bi-truck me-2 text-teal"></i> Delivery & Fulfilment Services
+            </h5>
+            <table class="table table-sm">
+              <tbody>
+                <tr>
+                  <td class="text-muted">Delivery Availability</td>
+                  <td class="font-weight-bold" id="delivery-status-val">—</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">Delivery Fee</td>
+                  <td class="font-weight-bold" id="delivery-fee-val">—</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">Delivery Service Radius</td>
+                  <td class="font-weight-bold" id="delivery-radius-val">—</td>
+                </tr>
+                <tr>
+                  <td class="text-muted">Self-Pickup Counter</td>
+                  <td class="text-success font-weight-bold">Always Available</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/geo.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pharmacyId = urlParams.get('id');
+      const medicineId = urlParams.get('medicineId');
+      const quantity = parseInt(urlParams.get('quantity')) || 1;
+
+      if (!pharmacyId) {
+        UI.showToast('Pharmacy ID is required', 'danger');
+        return;
+      }
+
+      await Geo.resolveLocation();
+      const loc = Geo.currentLocation;
+
+      try {
+        const res = await Api.get(`/pharmacies/${pharmacyId}/details`, {
+          medicineId,
+          quantity,
+          lat: loc.lat,
+          lng: loc.lng
+        });
+
+        if (res && res.data) {
+          renderDetails(res.data, medicineId, quantity);
+        }
+      } catch (err) {
+        document.getElementById('details-loading').innerHTML = `
+          <div class="alert alert-danger">${err.message || 'Failed to load pharmacy details'}</div>
+        `;
+      }
+    });
+
+    function renderDetails(data, medicineId, quantity) {
+      document.getElementById('details-loading').classList.add('d-none');
+      document.getElementById('details-container').classList.remove('d-none');
+
+      document.getElementById('pharmacy-name').textContent = data.name;
+      document.getElementById('pharmacy-address').innerHTML = `<i class="bi bi-geo-alt-fill text-danger me-1"></i> ${data.address}`;
+      document.getElementById('distance-info').textContent = UI.formatDistance(data.distanceKm) + ' away';
+      document.getElementById('eta-info').textContent = UI.formatEta(data.etaMinutes) + ' travel time';
+      
+      const openBadge = document.getElementById('open-status-badge');
+      openBadge.className = `badge ${data.openNow ? 'bg-success' : 'bg-secondary'}`;
+      openBadge.textContent = data.openNow ? 'Open Now' : 'Closed';
+
+      document.getElementById('data-source-badge').textContent = data.dataSource || 'SAMPLE';
+      document.getElementById('data-source-badge').className = data.dataSource === 'LIVE' ? 'badge-live' : 'badge-demo';
+
+      // Hours
+      document.getElementById('hours-status').textContent = data.openNow ? 'Open Now' : 'Currently Closed';
+      document.getElementById('hours-schedule').textContent = data.opens24x7 ? 'Open 24x7 Continuous' : `${data.openingTime} - ${data.closingTime}`;
+
+      // Delivery
+      document.getElementById('delivery-status-val').textContent = data.delivery ? data.delivery.status : 'UNAVAILABLE';
+      document.getElementById('delivery-fee-val').textContent = data.delivery ? UI.formatCurrency(data.delivery.fee) : '—';
+      document.getElementById('delivery-radius-val').textContent = data.delivery ? `${data.delivery.radiusKm} km` : '—';
+
+      // Medicine stock
+      document.getElementById('stock-units').textContent = `${data.availableQuantity} units`;
+      document.getElementById('unit-price').textContent = UI.formatCurrency(data.unitPrice);
+      document.getElementById('total-price').textContent = UI.formatCurrency(data.totalPrice);
+      document.getElementById('batch-expiry').textContent = data.expiryDate ? `Expires: ${data.expiryDate}` : 'Unexpired Batch';
+
+      if (data.requiresPrescription) {
+        document.getElementById('prescription-alert').classList.remove('d-none');
+      }
+
+      // Contact handlers
+      document.getElementById('btn-details-call').addEventListener('click', async () => {
+        try {
+          const res = await Api.get(`/contact/${data.pharmacyId}/links`, { medicineId, quantity });
+          if (res && res.data && res.data.callUrl) {
+            await Api.post('/contact/log', { pharmacyId: data.pharmacyId, medicineId, contactType: 'CALL' });
+            window.location.href = res.data.callUrl;
+          }
+        } catch (err) {
+          UI.showToast(err.message || 'Login required to access phone number', 'danger');
+        }
+      });
+
+      document.getElementById('btn-details-whatsapp').addEventListener('click', async () => {
+        try {
+          const res = await Api.get(`/contact/${data.pharmacyId}/links`, { medicineId, quantity });
+          if (res && res.data && res.data.whatsappUrl) {
+            await Api.post('/contact/log', { pharmacyId: data.pharmacyId, medicineId, contactType: 'WHATSAPP' });
+            window.open(res.data.whatsappUrl, '_blank');
+          }
+        } catch (err) {
+          UI.showToast(err.message || 'Login required to contact pharmacy', 'danger');
+        }
+      });
+
+      document.getElementById('btn-details-navigate').addEventListener('click', () => {
+        if (data.navigationUrl) {
+          window.open(data.navigationUrl, '_blank');
+        }
+      });
+
+      // Actions hand-off
+      const isDeliveryFeasible = data.delivery && (data.delivery.status === 'AVAILABLE' || data.delivery.status === 'BUSY');
+      const actionContainer = document.getElementById('request-actions-container');
+      actionContainer.innerHTML = `
+        ${isDeliveryFeasible ? `
+          <a href="/request/new.html?pharmacyId=${data.pharmacyId}&medicineId=${medicineId}&quantity=${quantity}&fulfilment=DELIVERY" 
+             class="btn btn-emergency">
+            <i class="bi bi-lightning-charge-fill me-1"></i> Request Emergency Delivery
+          </a>
+        ` : ''}
+        <a href="/request/new.html?pharmacyId=${data.pharmacyId}&medicineId=${medicineId}&quantity=${quantity}&fulfilment=PICKUP" 
+           class="btn btn-teal">
+          <i class="bi bi-bag-check-fill me-1"></i> Reserve for Self-Pickup
+        </a>
+      `;
+    }
+  </script>
+  <script src="assets/js/chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Side-by-Side Pharmacy Comparison | EmergencyMed</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5.3 CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/search.css">
+  <link rel="stylesheet" href="assets/css/chatbot.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="app-navbar py-2">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="navbar-brand" href="search.html">
+        <i class="bi bi-heart-pulse-fill text-danger"></i>
+        <span>EmergencyMed</span>
+      </a>
+      <a href="search.html" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-arrow-left me-1"></i> Back to Search
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="font-weight-bold text-navy mb-1">
+          <i class="bi bi-layout-split me-2 text-teal"></i> Pharmacy Comparison Matrix
+        </h2>
+        <p class="text-muted mb-0 small">Comparing selected approved pharmacies side-by-side. Best values in each row are highlighted in teal.</p>
+      </div>
+      <a href="search.html" class="btn btn-outline-navy btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Search More
+      </a>
+    </div>
+
+    <div id="compare-loading" class="text-center py-5">
+      <div class="spinner-border text-teal" role="status"></div>
+      <p class="text-muted mt-2">Loading comparison matrix...</p>
+    </div>
+
+    <div id="compare-table-wrapper" class="table-responsive card-surface p-3 d-none">
+      <table class="table table-bordered table-compare align-middle mb-0" id="compare-table">
+        <thead class="table-light text-center" id="compare-thead">
+          <!-- Populated dynamically -->
+        </thead>
+        <tbody id="compare-tbody">
+          <!-- Populated dynamically -->
+        </tbody>
+        <tfoot id="compare-tfoot" class="text-center">
+          <!-- Populated dynamically with request buttons -->
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Error container -->
+    <div id="compare-error" class="alert alert-danger d-none mt-3"></div>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/geo.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pharmacyIds = urlParams.getAll('pharmacyIds');
+      const medicineId = urlParams.get('medicineId');
+      const quantity = parseInt(urlParams.get('quantity')) || 1;
+      let lat = parseFloat(urlParams.get('lat'));
+      let lng = parseFloat(urlParams.get('lng'));
+
+      if (!pharmacyIds || pharmacyIds.length < 2) {
+        showError('At least 2 pharmacies must be selected to view comparison.');
+        return;
+      }
+
+      if (isNaN(lat) || isNaN(lng)) {
+        await Geo.resolveLocation();
+        lat = Geo.currentLocation.lat;
+        lng = Geo.currentLocation.lng;
+      }
+
+      try {
+        const res = await Api.get('/search/compare', {
+          pharmacyIds,
+          medicineId,
+          quantity,
+          lat,
+          lng
+        });
+
+        if (res && res.data && res.data.pharmacies) {
+          renderCompareMatrix(res.data.pharmacies, medicineId, quantity);
+        }
+      } catch (err) {
+        showError(err.message || 'Failed to load comparison data');
+      }
+    });
+
+    function showError(msg) {
+      document.getElementById('compare-loading').classList.add('d-none');
+      const errBox = document.getElementById('compare-error');
+      errBox.textContent = msg;
+      errBox.classList.remove('d-none');
+    }
+
+    function renderCompareMatrix(pharmacies, medicineId, quantity) {
+      document.getElementById('compare-loading').classList.add('d-none');
+      document.getElementById('compare-table-wrapper').classList.remove('d-none');
+
+      const thead = document.getElementById('compare-thead');
+      const tbody = document.getElementById('compare-tbody');
+      const tfoot = document.getElementById('compare-tfoot');
+
+      // Build Headers
+      let headHtml = `<tr><th style="width: 200px;" class="text-start">Metric / Feature</th>`;
+      pharmacies.forEach(p => {
+        headHtml += `
+          <th style="min-width: 240px;">
+            <div class="font-weight-bold text-navy fs-5">${p.name}</div>
+            <div class="small text-muted font-weight-normal">${p.address}</div>
+          </th>
+        `;
+      });
+      headHtml += `</tr>`;
+      thead.innerHTML = headHtml;
+
+      // Find Best Values
+      const minDistance = Math.min(...pharmacies.map(p => p.distanceKm || 9999));
+      const minUnitPrice = Math.min(...pharmacies.map(p => Number(p.unitPrice) || 9999));
+      const minTotalPrice = Math.min(...pharmacies.map(p => Number(p.totalPrice) || 9999));
+      const maxQty = Math.max(...pharmacies.map(p => p.availableQuantity || 0));
+      const minFee = Math.min(...pharmacies.map(p => p.delivery ? Number(p.delivery.fee) : 9999));
+
+      // Build Rows
+      const rows = [
+        {
+          label: 'Distance & Travel Time',
+          render: (p) => `${UI.formatDistance(p.distanceKm)} (${UI.formatEta(p.etaMinutes)})`,
+          isBest: (p) => p.distanceKm === minDistance
+        },
+        {
+          label: 'Unit Price',
+          render: (p) => `${UI.formatCurrency(p.unitPrice)}`,
+          isBest: (p) => Number(p.unitPrice) === minUnitPrice
+        },
+        {
+          label: `Total Price (${quantity} units)`,
+          render: (p) => `${UI.formatCurrency(p.totalPrice)}`,
+          isBest: (p) => Number(p.totalPrice) === minTotalPrice
+        },
+        {
+          label: 'Available Stock',
+          render: (p) => `<span class="font-weight-bold text-success">${p.availableQuantity} units</span>`,
+          isBest: (p) => p.availableQuantity === maxQty
+        },
+        {
+          label: 'Batch Expiry',
+          render: (p) => p.expiryDate ? p.expiryDate : 'Unexpired',
+          isBest: () => false
+        },
+        {
+          label: 'Delivery Availability',
+          render: (p) => {
+            const status = p.delivery ? p.delivery.status : 'UNAVAILABLE';
+            const badgeClass = status === 'AVAILABLE' ? 'badge-delivery-available' : (status === 'BUSY' ? 'badge-delivery-busy' : 'badge-delivery-unavailable');
+            return `<span class="${badgeClass}">${status}</span>`;
+          },
+          isBest: (p) => p.delivery && p.delivery.status === 'AVAILABLE'
+        },
+        {
+          label: 'Delivery Fee',
+          render: (p) => (p.delivery && p.delivery.status !== 'UNAVAILABLE') ? UI.formatCurrency(p.delivery.fee) : '—',
+          isBest: (p) => p.delivery && p.delivery.status !== 'UNAVAILABLE' && Number(p.delivery.fee) === minFee
+        },
+        {
+          label: 'Operating Hours',
+          render: (p) => {
+            const statusText = p.openNow ? '<span class="badge bg-success">Open Now</span>' : '<span class="badge bg-secondary">Closed</span>';
+            const sched = p.opens24x7 ? '24x7' : `${p.openingTime} - ${p.closingTime}`;
+            return `${statusText} <small class="d-block text-muted mt-1">${sched}</small>`;
+          },
+          isBest: (p) => p.openNow || p.opens24x7
+        },
+        {
+          label: 'Data Source',
+          render: (p) => `<span class="${p.dataSource === 'LIVE' ? 'badge-live' : 'badge-demo'}">${p.dataSource}</span>`,
+          isBest: (p) => p.dataSource === 'LIVE'
+        }
+      ];
+
+      let bodyHtml = '';
+      rows.forEach(r => {
+        bodyHtml += `<tr><td class="font-weight-semibold text-start">${r.label}</td>`;
+        pharmacies.forEach(p => {
+          const highlightClass = r.isBest(p) ? 'best-value' : '';
+          bodyHtml += `<td class="text-center ${highlightClass}">${r.render(p)}</td>`;
+        });
+        bodyHtml += `</tr>`;
+      });
+      tbody.innerHTML = bodyHtml;
+
+      // Build Footers with Hand-off Request Buttons
+      let footHtml = `<tr><td class="font-weight-bold text-start">Fulfilment Actions</td>`;
+      pharmacies.forEach(p => {
+        const isDeliveryFeasible = p.delivery && (p.delivery.status === 'AVAILABLE' || p.delivery.status === 'BUSY');
+        footHtml += `
+          <td>
+            <div class="d-flex flex-column gap-2">
+              ${isDeliveryFeasible ? `
+                <a href="/request/new.html?pharmacyId=${p.pharmacyId}&medicineId=${medicineId}&quantity=${quantity}&fulfilment=DELIVERY" 
+                   class="btn btn-sm btn-emergency">
+                  <i class="bi bi-lightning-charge-fill me-1"></i> Request Delivery
+                </a>
+              ` : ''}
+              <a href="/request/new.html?pharmacyId=${p.pharmacyId}&medicineId=${medicineId}&quantity=${quantity}&fulfilment=PICKUP" 
+                 class="btn btn-sm btn-teal">
+                <i class="bi bi-bag-check-fill me-1"></i> Self-Pickup
+              </a>
+              <button class="btn btn-sm btn-outline-navy" onclick="window.open('${p.navigationUrl}', '_blank')">
+                <i class="bi bi-compass-fill me-1"></i> Navigate
+              </button>
+            </div>
+          </td>
+        `;
+      });
+      footHtml += `</tr>`;
+      tfoot.innerHTML = footHtml;
+    }
+  </script>
+  <script src="assets/js/chatbot.js"></script>
+</body>
+</html>

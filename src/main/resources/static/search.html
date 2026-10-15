@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Medicine Availability & Search | Lifeline Network</title>
+  <meta name="description" content="Find nearby approved pharmacies holding real-time or verified stock for emergency medications. Compare price, distance, delivery availability, and contact instantly.">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5.3 CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom Theme Styles -->
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/search.css">
+  <link rel="stylesheet" href="assets/css/chatbot.css">
+</head>
+<body>
+
+  <!-- App Header / Navbar -->
+  <header class="app-navbar py-2">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="navbar-brand" href="search.html" id="brand-logo">
+        <i class="bi bi-heart-pulse-fill text-danger"></i>
+        <span>EmergencyMed</span>
+        <span class="brand-badge">Search & Availability</span>
+      </a>
+      <div class="d-flex align-items-center gap-3">
+        <div id="nav-user-badge">
+          <span class="badge bg-light text-dark px-2 py-1">
+            <i class="bi bi-person-circle me-1"></i> Patient Session
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="search-hero">
+    <div class="container text-center">
+      <h1 class="search-hero-title">Find Nearby Critical Medications</h1>
+      <p class="search-hero-subtitle">Instant inventory locator across approved pharmacies with price, distance, and live delivery status.</p>
+    </div>
+  </section>
+
+  <!-- Main Container -->
+  <main class="container pb-5">
+    
+    <!-- Search Card Container -->
+    <div class="search-card-container mb-4">
+      <div class="search-box">
+        
+        <!-- Amber Disclaimer Banner (PDF Section 2 & 3) -->
+        <div class="disclaimer-banner" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-4 flex-shrink-0"></i>
+          <div>
+            <strong>Notice:</strong> Demo inventory stock is not real-time. Please call the pharmacy to confirm physical availability before travelling.
+          </div>
+        </div>
+
+        <!-- Search Form -->
+        <form id="search-form" autocomplete="off">
+          <div class="row g-3 align-items-end">
+            
+            <!-- Medicine Typeahead Input -->
+            <div class="col-lg-5 col-md-6">
+              <label for="medicine-search-input" class="form-label font-weight-bold">Medicine Name</label>
+              <div class="typeahead-wrapper">
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                  </span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="medicine-search-input" 
+                         placeholder="Type medicine name (e.g., Paracetamol, Adrenaline)..." required>
+                </div>
+                <div class="typeahead-dropdown" id="typeahead-dropdown"></div>
+              </div>
+            </div>
+
+            <!-- Quantity Stepper -->
+            <div class="col-lg-2 col-md-3 col-6">
+              <label class="form-label font-weight-bold">Quantity</label>
+              <div class="qty-stepper">
+                <button type="button" class="qty-btn" id="btn-qty-minus">-</button>
+                <input type="number" class="qty-input" id="search-quantity" value="5" min="1" max="1000">
+                <button type="button" class="qty-btn" id="btn-qty-plus">+</button>
+              </div>
+            </div>
+
+            <!-- Radius Select -->
+            <div class="col-lg-2 col-md-3 col-6">
+              <label for="radius-select" class="form-label font-weight-bold">Radius</label>
+              <select class="form-select" id="radius-select">
+                <option value="5">Within 5 km</option>
+                <option value="10" selected>Within 10 km (Default)</option>
+                <option value="20">Within 20 km</option>
+                <option value="35">Within 35 km</option>
+                <option value="50">Within 50 km</option>
+              </select>
+            </div>
+
+            <!-- Submit Button & Location Action -->
+            <div class="col-lg-3 col-md-12 d-flex gap-2">
+              <button type="submit" class="btn btn-teal w-100" id="btn-submit-search">
+                <i class="bi bi-search me-1"></i> Search Pharmacies
+              </button>
+              <button type="button" class="btn btn-outline-secondary flex-shrink-0" id="btn-use-location" title="Detect Location via GPS">
+                <i class="bi bi-crosshair"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Prescription Warning Banner (Dynamic) -->
+          <div id="rx-selected-banner" class="prescription-warning d-none">
+            <i class="bi bi-exclamation-octagon-fill"></i> Prescription Required: This item requires a verified medical prescription before fulfillment.
+          </div>
+
+          <!-- Location Badge & Manual Coordinates Toggle -->
+          <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+            <div id="location-status-badge">
+              <span class="badge bg-secondary py-2 px-3">
+                <i class="bi bi-geo-alt me-1"></i> Detecting location...
+              </span>
+            </div>
+            <button class="btn btn-link btn-sm text-decoration-none p-0" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#manual-location-panel" aria-expanded="false">
+              <i class="bi bi-sliders me-1"></i> Manual Coordinates & GPS Settings
+            </button>
+          </div>
+
+          <!-- Collapsible Manual Coordinate Panel -->
+          <div class="collapse mt-3" id="manual-location-panel">
+            <div class="p-3 bg-light rounded border">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                  <label for="manual-lat" class="form-label small mb-1">Latitude</label>
+                  <input type="number" step="0.0001" class="form-control form-control-sm" id="manual-lat" value="13.0012">
+                </div>
+                <div class="col-md-5">
+                  <label for="manual-lng" class="form-label small mb-1">Longitude</label>
+                  <input type="number" step="0.0001" class="form-control form-control-sm" id="manual-lng" value="80.2565">
+                </div>
+                <div class="col-md-2">
+                  <button type="button" class="btn btn-sm btn-outline-navy w-100" id="btn-save-manual-location">
+                    Apply GPS
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Searches Chips -->
+          <div class="recent-chips-container">
+            <span class="small font-weight-bold text-muted"><i class="bi bi-clock-history me-1"></i> Recent:</span>
+            <div id="recent-searches-list" class="d-inline-flex flex-wrap gap-2"></div>
+            <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-auto" 
+                    id="btn-clear-history" style="display: none;" onclick="clearSearchHistory()">
+              <i class="bi bi-trash3 me-1"></i> Clear History
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Filter & Sort Bar -->
+    <div class="filter-bar">
+      <div class="d-flex align-items-center gap-3">
+        <label for="sort-select" class="small font-weight-bold text-muted mb-0">Sort By:</label>
+        <select class="form-select form-select-sm" id="sort-select" style="width: 170px;">
+          <option value="distance" selected>Distance (Nearest First)</option>
+          <option value="price">Price (Lowest First)</option>
+          <option value="quantity">Stock Quantity (High to Low)</option>
+          <option value="delivery">Delivery Available First</option>
+        </select>
+      </div>
+
+      <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" id="delivery-only-switch">
+        <label class="form-check-label small font-weight-medium" for="delivery-only-switch">
+          Delivery Available Only
+        </label>
+      </div>
+    </div>
+
+    <!-- Search Results / Empty State / Alternatives Container -->
+    <div id="results-container">
+      <div class="card-surface p-5 text-center">
+        <i class="bi bi-capsule-pill text-teal" style="font-size: 3.5rem;"></i>
+        <h4 class="mt-3 font-weight-bold text-navy">Find Emergency Medications</h4>
+        <p class="text-muted" style="max-width: 500px; margin: 0 auto;">
+          Enter the medicine name in the search bar above to see live availability, distances, prices, and delivery statuses across verified pharmacies.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Sticky Comparison Tray (PDF Section 4) -->
+  <div class="compare-tray" id="compare-tray">
+    <div class="compare-tray-content">
+      <div class="d-flex align-items-center gap-3">
+        <span class="font-weight-bold text-navy">
+          Compare (<span id="tray-count">0</span>/3):
+        </span>
+        <div class="tray-chips" id="tray-chips-container"></div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="Compare.clearAll()">
+          Clear All
+        </button>
+        <button type="button" class="btn btn-sm btn-teal" id="btn-open-compare" onclick="Compare.openCompareModal()" disabled>
+          <i class="bi bi-layout-split me-1"></i> Compare Side-by-Side
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container text-center">
+      <p class="mb-1 font-weight-medium">Lifeline Emergency Medicine Availability Network &copy; 2026</p>
+      <small class="text-muted">Module 3: Medicine Search & Availability &bull; Designed strictly according to architectural specifications</small>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5.3 Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared & Module Scripts -->
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/geo.js"></script>
+  <script src="assets/js/compare.js"></script>
+  <script src="assets/js/search.js"></script>
+  <script src="assets/js/chatbot.js"></script>
+</body>
+</html>

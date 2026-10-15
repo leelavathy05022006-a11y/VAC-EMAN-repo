@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management - Emergency Medicine Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div id="main-navbar"></div>
+
+  <main class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <h2 class="fw-bold mb-1">User Directory & Access Control</h2>
+        <p class="text-muted small mb-0">Search, filter, activate/deactivate accounts, and verify delivery drivers</p>
+      </div>
+      <a href="/dashboard/admin.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Admin Dashboard</a>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card-premium p-4 border-0 mb-4 bg-white shadow-sm">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label fw-semibold small">Search by Name or Email</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-start-0" id="filter-q" placeholder="Type name or email...">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold small">Filter by Role</label>
+          <select class="form-select" id="filter-role">
+            <option value="">All Roles</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="PATIENT">PATIENT</option>
+            <option value="HOSPITAL">HOSPITAL</option>
+            <option value="PHARMACY">PHARMACY</option>
+            <option value="DELIVERY">DELIVERY</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold small">Account Status</label>
+          <select class="form-select" id="filter-active">
+            <option value="">All Statuses</option>
+            <option value="true">Active Only</option>
+            <option value="false">Deactivated Only</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-teal w-100 fw-bold" id="btn-apply-filters">
+            <i class="bi bi-funnel me-1"></i> Apply
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="card-premium border-0 bg-white shadow-sm overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-uppercase small">
+            <tr>
+              <th>User ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr>
+              <td colspan="7" class="text-center py-5">
+                <div class="spinner-border text-teal" role="status"></div>
+                <div class="mt-2 text-muted small">Loading user directory...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-top">
+        <span class="text-muted small" id="pagination-info">Showing 0 users</span>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" id="btn-prev" disabled>&larr; Previous</button>
+          <button class="btn btn-outline-secondary" id="btn-next" disabled>Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const admin = await AuthGuard.init(['ADMIN']);
+      if (!admin) return;
+
+      let currentPage = 0;
+      const pageSize = 10;
+      let totalPages = 1;
+
+      async function loadUsers(page = 0) {
+        currentPage = page;
+        const q = document.getElementById('filter-q').value.trim();
+        const role = document.getElementById('filter-role').value;
+        const active = document.getElementById('filter-active').value;
+
+        let queryParams = `?page=${page}&size=${pageSize}`;
+        if (q) queryParams += `&q=${encodeURIComponent(q)}`;
+        if (role) queryParams += `&role=${role}`;
+        if (active) queryParams += `&active=${active}`;
+
+        try {
+          const res = await Api.get(`/api/v1/admin/users${queryParams}`);
+          const tbody = document.getElementById('users-tbody');
+          totalPages = res.totalPages || 1;
+
+          if (!res.content || res.content.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No users match your criteria</td></tr>`;
+            document.getElementById('pagination-info').textContent = 'Showing 0 users';
+            document.getElementById('btn-prev').disabled = true;
+            document.getElementById('btn-next').disabled = true;
+            return;
+          }
+
+          tbody.innerHTML = res.content.map(u => {
+            const isSelf = u.id === admin.userId;
+            const statusBadge = u.isActive 
+              ? `<span class="badge bg-success">Active</span>`
+              : `<span class="badge bg-danger">Deactivated</span>`;
+
+            let actionButtons = '';
+            if (isSelf) {
+              actionButtons = `<span class="badge bg-light text-muted border">Current Admin</span>`;
+            } else {
+              actionButtons = `
+                <button class="btn btn-sm ${u.isActive ? 'btn-outline-danger' : 'btn-outline-success'} py-1 px-2"
+                        onclick="toggleUserStatus(${u.id}, ${!u.isActive})">
+                  ${u.isActive ? '<i class="bi bi-slash-circle me-1"></i> Deactivate' : '<i class="bi bi-check-circle me-1"></i> Activate'}
+                </button>
+              `;
+
+              if (u.role === 'DELIVERY') {
+                actionButtons += `
+                  <button class="btn btn-sm btn-outline-warning text-dark py-1 px-2 ms-1"
+                          onclick="verifyDelivery(${u.id})">
+                    <i class="bi bi-patch-check-fill me-1"></i> Verify
+                  </button>
+                `;
+              }
+            }
+
+            return `
+              <tr>
+                <td class="fw-bold">#${u.id}</td>
+                <td class="fw-semibold">${u.fullName}</td>
+                <td>${u.email}</td>
+                <td>${u.phone}</td>
+                <td><span class="badge badge-role badge-role-${u.role.toLowerCase()}">${u.role}</span></td>
+                <td>${statusBadge}</td>
+                <td class="text-end">${actionButtons}</td>
+              </tr>
+            `;
+          }).join('');
+
+          document.getElementById('pagination-info').textContent = 
+            `Showing page ${currentPage + 1} of ${totalPages} (Total: ${res.totalElements} users)`;
+
+          document.getElementById('btn-prev').disabled = currentPage <= 0;
+          document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      }
+
+      window.toggleUserStatus = async function(userId, newActive) {
+        if (!confirm(`Are you sure you want to ${newActive ? 'ACTIVATE' : 'DEACTIVATE'} user #${userId}?`)) return;
+        try {
+          await Api.patch(`/api/v1/admin/users/${userId}/status`, { active: newActive });
+          UI.showToast(`User #${userId} status updated!`, 'success');
+          loadUsers(currentPage);
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      };
+
+      window.verifyDelivery = async function(userId) {
+        try {
+          await Api.patch(`/api/v1/admin/delivery-partners/${userId}/verify`);
+          UI.showToast(`Delivery partner verified successfully!`, 'success');
+          loadUsers(currentPage);
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      };
+
+      document.getElementById('btn-apply-filters').addEventListener('click', () => loadUsers(0));
+      document.getElementById('btn-prev').addEventListener('click', () => {
+        if (currentPage > 0) loadUsers(currentPage - 1);
+      });
+      document.getElementById('btn-next').addEventListener('click', () => {
+        if (currentPage < totalPages - 1) loadUsers(currentPage + 1);
+      });
+
+      loadUsers(0);
+    });
+  </script>
+</body>
+</html>

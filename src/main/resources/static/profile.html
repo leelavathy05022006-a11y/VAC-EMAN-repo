@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Emergency Medicine Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div id="main-navbar"></div>
+
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+
+        <!-- Profile Header Banner -->
+        <div class="card-premium p-4 mb-4 border-0 shadow-sm bg-white">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="p-3 rounded-circle text-white bg-primary fs-3 shadow-sm">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div>
+                <h3 class="fw-bold mb-1" id="header-user-name">Loading Profile...</h3>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge badge-role" id="header-user-role">-</span>
+                  <span class="text-muted small" id="header-user-email">-</span>
+                  <span class="badge bg-success" id="header-user-active">Active</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <span class="text-muted small d-block">Last Login: <span id="header-last-login" class="fw-semibold">-</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Tabs -->
+        <div class="card-premium shadow-sm border-0 bg-white">
+          <div class="card-header bg-white border-bottom">
+            <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
+              <li class="nav-item">
+                <button class="nav-link active fw-semibold text-dark" id="details-tab" data-bs-toggle="tab" data-bs-target="#tab-details" type="button">
+                  <i class="bi bi-person-lines-fill me-1"></i> Personal & Role Details
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link fw-semibold text-dark" id="location-tab" data-bs-toggle="tab" data-bs-target="#tab-location" type="button">
+                  <i class="bi bi-geo-alt-fill me-1 text-danger"></i> Saved Location & GPS
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link fw-semibold text-dark" id="security-tab" data-bs-toggle="tab" data-bs-target="#tab-security" type="button">
+                  <i class="bi bi-shield-lock-fill me-1 text-primary"></i> Security & Password
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-body p-4 p-md-5">
+            <div class="tab-content" id="profileTabsContent">
+
+              <!-- Tab 1: Details -->
+              <div class="tab-pane fade show active" id="tab-details" role="tabpanel">
+                <form id="form-details">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Full Legal Name</label>
+                      <input type="text" class="form-control" id="details-name" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Email Address (Read-only)</label>
+                      <input type="email" class="form-control bg-light" id="details-email" readonly disabled>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Primary Phone</label>
+                      <input type="tel" class="form-control" id="details-phone" pattern="^[6-9][0-9]{9}$" required>
+                    </div>
+
+                    <!-- Role-specific fields -->
+                    <div id="patient-specific-fields" class="col-12 row g-3 mt-1 d-none">
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Date of Birth</label>
+                        <input type="date" class="form-control" id="details-dob">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Blood Group</label>
+                        <input type="text" class="form-control" id="details-bloodGroup" placeholder="e.g. O+">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Emergency Contact Person</label>
+                        <input type="text" class="form-control" id="details-emergencyName">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Emergency Contact Phone</label>
+                        <input type="tel" class="form-control" id="details-emergencyPhone">
+                      </div>
+                    </div>
+
+                    <div id="hospital-specific-fields" class="col-12 row g-3 mt-1 d-none">
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Hospital Name</label>
+                        <input type="text" class="form-control" id="details-hospitalName">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Registration Number (Locked)</label>
+                        <input type="text" class="form-control bg-light" id="details-registrationNo" readonly disabled>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold">Emergency Trauma Line</label>
+                        <input type="tel" class="form-control" id="details-emergencyLine">
+                      </div>
+                    </div>
+
+                    <div id="delivery-specific-fields" class="col-12 row g-3 mt-1 d-none">
+                      <div class="col-md-4">
+                        <label class="form-label fw-semibold">Vehicle Type</label>
+                        <input type="text" class="form-control" id="details-vehicleType">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-semibold">Vehicle Number</label>
+                        <input type="text" class="form-control" id="details-vehicleNumber">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-semibold">Driving Licence No</label>
+                        <input type="text" class="form-control" id="details-drivingLicense">
+                      </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                      <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        <i class="bi bi-check2 me-1"></i> Save Details
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Tab 2: Location -->
+              <div class="tab-pane fade" id="tab-location" role="tabpanel">
+                <form id="form-location">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Saved Coordinates</h5>
+                    <button type="button" class="btn btn-teal btn-sm" id="btn-profile-geo">
+                      <i class="bi bi-geo-alt-fill me-1"></i> Use My Current Location
+                    </button>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label fw-semibold">Street Address</label>
+                      <input type="text" class="form-control" id="loc-address" placeholder="Physical Address">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">City</label>
+                      <input type="text" class="form-control" id="loc-city">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Pincode</label>
+                      <input type="text" class="form-control" id="loc-pincode">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-semibold">Latitude</label>
+                      <input type="number" step="any" class="form-control" id="loc-latitude">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-semibold">Longitude</label>
+                      <input type="number" step="any" class="form-control" id="loc-longitude">
+                    </div>
+                    <div class="col-12 mt-4">
+                      <button type="submit" class="btn btn-teal px-4 fw-bold">
+                        <i class="bi bi-geo-alt me-1"></i> Update Location
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Tab 3: Security -->
+              <div class="tab-pane fade" id="tab-security" role="tabpanel">
+                <form id="form-security" style="max-width: 500px;">
+                  <h5 class="fw-bold mb-3">Change Account Password</h5>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Current Password</label>
+                    <input type="password" class="form-control" id="sec-oldPassword" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">New Password</label>
+                    <input type="password" class="form-control" id="sec-newPassword" required>
+                    <div class="form-text">Must be 8-64 chars with uppercase, lowercase, digit, and symbol.</div>
+                  </div>
+                  <div class="mb-4">
+                    <label class="form-label fw-semibold">Confirm New Password</label>
+                    <input type="password" class="form-control" id="sec-confirmPassword" required>
+                  </div>
+                  <button type="submit" class="btn btn-dark px-4 fw-bold">
+                    <i class="bi bi-key-fill me-1"></i> Update Password
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await AuthGuard.init();
+      if (!user) return;
+
+      let fullProfile = null;
+
+      async function loadProfile() {
+        try {
+          fullProfile = await Api.get('/api/v1/users/me');
+          document.getElementById('header-user-name').textContent = fullProfile.fullName;
+          document.getElementById('header-user-email').textContent = fullProfile.email;
+          document.getElementById('header-user-role').textContent = fullProfile.role;
+          document.getElementById('header-user-role').className = `badge badge-role badge-role-${fullProfile.role.toLowerCase()}`;
+          document.getElementById('header-last-login').textContent = fullProfile.lastLoginAt ? new Date(fullProfile.lastLoginAt).toLocaleString() : 'First session';
+
+          // Fill details form
+          document.getElementById('details-name').value = fullProfile.fullName || '';
+          document.getElementById('details-email').value = fullProfile.email || '';
+          document.getElementById('details-phone').value = fullProfile.phone || '';
+
+          if (fullProfile.role === 'PATIENT') {
+            document.getElementById('patient-specific-fields').classList.remove('d-none');
+            document.getElementById('details-dob').value = fullProfile.dateOfBirth || '';
+            document.getElementById('details-bloodGroup').value = fullProfile.bloodGroup || '';
+            document.getElementById('details-emergencyName').value = fullProfile.emergencyContactName || '';
+            document.getElementById('details-emergencyPhone').value = fullProfile.emergencyContactPhone || '';
+          } else if (fullProfile.role === 'HOSPITAL') {
+            document.getElementById('hospital-specific-fields').classList.remove('d-none');
+            document.getElementById('details-hospitalName').value = fullProfile.hospitalName || '';
+            document.getElementById('details-registrationNo').value = fullProfile.registrationNo || '';
+            document.getElementById('details-emergencyLine').value = fullProfile.emergencyPhone || '';
+          } else if (fullProfile.role === 'DELIVERY') {
+            document.getElementById('delivery-specific-fields').classList.remove('d-none');
+            document.getElementById('details-vehicleType').value = fullProfile.vehicleType || '';
+            document.getElementById('details-vehicleNumber').value = fullProfile.vehicleNumber || '';
+            document.getElementById('details-drivingLicense').value = fullProfile.drivingLicenseNo || '';
+          }
+
+          // Fill location
+          document.getElementById('loc-address').value = fullProfile.address || '';
+          document.getElementById('loc-city').value = fullProfile.city || '';
+          document.getElementById('loc-pincode').value = fullProfile.pincode || '';
+          document.getElementById('loc-latitude').value = fullProfile.latitude || '';
+          document.getElementById('loc-longitude').value = fullProfile.longitude || '';
+
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      }
+
+      await loadProfile();
+
+      // Form 1 Details Submit
+      document.getElementById('form-details').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const payload = {
+            fullName: document.getElementById('details-name').value.trim(),
+            phone: document.getElementById('details-phone').value.trim(),
+            dateOfBirth: document.getElementById('details-dob')?.value || null,
+            bloodGroup: document.getElementById('details-bloodGroup')?.value || null,
+            emergencyContactName: document.getElementById('details-emergencyName')?.value || null,
+            emergencyContactPhone: document.getElementById('details-emergencyPhone')?.value || null,
+            hospitalName: document.getElementById('details-hospitalName')?.value || null,
+            emergencyPhone: document.getElementById('details-emergencyLine')?.value || null,
+            vehicleType: document.getElementById('details-vehicleType')?.value || null,
+            vehicleNumber: document.getElementById('details-vehicleNumber')?.value || null,
+            drivingLicenseNo: document.getElementById('details-drivingLicense')?.value || null
+          };
+          await Api.put('/api/v1/users/me', payload);
+          UI.showToast('Profile details updated successfully!', 'success');
+          await loadProfile();
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      });
+
+      // Form 2 Location Submit
+      document.getElementById('btn-profile-geo').addEventListener('click', () => {
+        navigator.geolocation?.getCurrentPosition(
+          pos => {
+            document.getElementById('loc-latitude').value = pos.coords.latitude.toFixed(6);
+            document.getElementById('loc-longitude').value = pos.coords.longitude.toFixed(6);
+            UI.showToast('Coordinates captured from GPS', 'success');
+          },
+          () => UI.showToast('Could not retrieve current GPS', 'warning')
+        );
+      });
+
+      document.getElementById('form-location').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const payload = {
+            address: document.getElementById('loc-address').value.trim(),
+            city: document.getElementById('loc-city').value.trim(),
+            pincode: document.getElementById('loc-pincode').value.trim(),
+            latitude: document.getElementById('loc-latitude').value ? parseFloat(document.getElementById('loc-latitude').value) : null,
+            longitude: document.getElementById('loc-longitude').value ? parseFloat(document.getElementById('loc-longitude').value) : null
+          };
+          await Api.put('/api/v1/users/me/location', payload);
+          UI.showToast('Location coordinates saved successfully!', 'success');
+          await loadProfile();
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      });
+
+      // Form 3 Password Submit
+      document.getElementById('form-security').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const payload = {
+            oldPassword: document.getElementById('sec-oldPassword').value,
+            newPassword: document.getElementById('sec-newPassword').value,
+            confirmPassword: document.getElementById('sec-confirmPassword').value
+          };
+          await Api.put('/api/v1/auth/change-password', payload);
+          UI.showToast('Password changed successfully!', 'success');
+          document.getElementById('form-security').reset();
+        } catch (err) {
+          UI.showToast(err.message, 'danger');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

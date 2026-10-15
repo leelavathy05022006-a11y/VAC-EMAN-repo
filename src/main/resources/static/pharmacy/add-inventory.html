@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Medicine to Stock - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom px-4">
+  <a class="navbar-brand fw-bold fs-4" href="/"><i class="bi bi-hospital me-2"></i>EmergencyMed Pharmacy</a>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <a href="/chennai-pharmacies.html" class="nav-link"><i class="bi bi-geo-alt me-1"></i> Chennai Discovery</a>
+    <a href="/pharmacy/inventory.html" class="nav-link"><i class="bi bi-box-seam me-1"></i> Inventory</a>
+    <a href="/pharmacy/settings.html" class="nav-link"><i class="bi bi-gear me-1"></i> Settings</a>
+    <a href="/admin/medicines.html" class="nav-link"><i class="bi bi-shield-lock me-1"></i> Admin Catalogue</a>
+    <a href="/medicine-catalogue.html" class="nav-link"><i class="bi bi-search me-1"></i> Public Search</a>
+  </div>
+</nav>
+
+<div class="container py-5" style="max-width: 700px;">
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-white border-bottom p-4">
+      <h4 class="fw-bold mb-0 text-navy"><i class="bi bi-plus-circle me-2 text-teal"></i>Add Medicine to Stock</h4>
+      <p class="text-muted small mb-0 mt-1">Select a medicine from the admin catalogue and set initial inventory details.</p>
+    </div>
+    <div class="card-body p-4">
+      <form id="addInventoryForm">
+        
+        <!-- Medicine Search Typeahead -->
+        <div class="mb-3 position-relative">
+          <label class="form-label fw-semibold">Select Medicine from Catalogue *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input type="text" id="medicine-search" class="form-control" placeholder="Type medicine name or generic name..." autocomplete="off">
+          </div>
+          <input type="hidden" id="selected-medicine-id" name="medicineId">
+          <div id="typeahead-results" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto;"></div>
+          <div id="selected-medicine-card" class="card bg-light mt-2 d-none p-3 border">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong id="card-med-name">--</strong>
+                <div class="small text-muted" id="card-med-details">--</div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-danger" id="clear-selected-med"><i class="bi bi-x"></i> Change</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Batch Number *</label>
+            <input type="text" name="batchNo" class="form-control" placeholder="e.g. BATCH-1234" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Initial Quantity *</label>
+            <input type="number" name="quantity" class="form-control" placeholder="e.g. 50" min="0" max="100000" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Unit Price (₹) *</label>
+            <input type="number" step="0.01" name="unitPrice" class="form-control" placeholder="e.g. 28.50" min="0.01" max="100000" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Low Stock Threshold</label>
+            <input type="number" name="lowStockThreshold" class="form-control" value="10" min="0" max="1000">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Expiry Date *</label>
+          <input type="date" name="expiryDate" class="form-control" required>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary-teal flex-grow-1"><i class="bi bi-check-circle me-1"></i> Save Medicine to Stock</button>
+          <a href="/pharmacy/inventory.html" class="btn btn-outline-secondary px-4">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('medicine-search');
+  const resultsDiv = document.getElementById('typeahead-results');
+  const selectedMedId = document.getElementById('selected-medicine-id');
+  const selectedCard = document.getElementById('selected-medicine-card');
+
+  let timeout = null;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(timeout);
+    const q = e.target.value.trim();
+    if (q.length < 1) {
+      resultsDiv.classList.add('d-none');
+      return;
+    }
+    timeout = setTimeout(async () => {
+      try {
+        const pageData = await apiRequest(`/medicines?q=${encodeURIComponent(q)}&size=10`);
+        const items = pageData.content || [];
+        if (items.length === 0) {
+          resultsDiv.innerHTML = '<div class="list-group-item text-muted">No medicines found matching query</div>';
+        } else {
+          resultsDiv.innerHTML = items.map(m => {
+            const safeName = (m.name || '').replace(/'/g, "\\'");
+            const safeGeneric = (m.genericName || '').replace(/'/g, "\\'");
+            const safeStrength = (m.strength || '').replace(/'/g, "\\'");
+            const safeForm = (m.dosageForm || '').replace(/'/g, "\\'");
+            return `
+              <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="selectMedicine(${m.id}, '${safeName}', '${safeGeneric}', '${safeStrength}', '${safeForm}')">
+                <div>
+                  <strong>${m.name}</strong> <small class="text-muted">(${m.genericName || 'Generic'})</small>
+                </div>
+                <span class="badge bg-light text-dark">${m.strength || ''} ${m.dosageForm || ''}</span>
+              </button>
+            `;
+          }).join('');
+        }
+        resultsDiv.classList.remove('d-none');
+      } catch (err) {
+        console.error(err);
+      }
+    }, 200);
+  });
+
+  window.selectMedicine = (id, name, generic, strength, form) => {
+    selectedMedId.value = id;
+    document.getElementById('card-med-name').innerText = name;
+    document.getElementById('card-med-details').innerText = `${generic} | ${strength} ${form}`;
+    selectedCard.classList.remove('d-none');
+    resultsDiv.classList.add('d-none');
+    searchInput.value = name;
+  };
+
+  document.getElementById('clear-selected-med').addEventListener('click', () => {
+    selectedMedId.value = '';
+    selectedCard.classList.add('d-none');
+    searchInput.value = '';
+  });
+
+  const form = document.getElementById('addInventoryForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!selectedMedId.value) {
+      showToast('Please select a medicine from the typeahead list', 'warning');
+      return;
+    }
+
+    const formData = new FormData(form);
+    const body = {
+      medicineId: parseInt(selectedMedId.value),
+      batchNo: formData.get('batchNo'),
+      quantity: parseInt(formData.get('quantity')),
+      unitPrice: parseFloat(formData.get('unitPrice')),
+      lowStockThreshold: parseInt(formData.get('lowStockThreshold') || 10),
+      expiryDate: formData.get('expiryDate')
+    };
+
+    try {
+      await apiRequest('/inventory', { method: 'POST', body: JSON.stringify(body) });
+      showToast('Medicine added to live stock!');
+      setTimeout(() => {
+        window.location.href = '/pharmacy/inventory.html';
+      }, 1000);
+    } catch (err) {
+      showToast(err.message, 'danger');
+    }
+  });
+});
+</script>
+</body>
+</html>

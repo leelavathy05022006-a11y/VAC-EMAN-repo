@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary-navy: #102A43;
+  --primary-navy-dark: #091a2b;
+  --secondary-teal: #0D9488;
+  --secondary-teal-hover: #0f766e;
+  --emergency-red: #DC2626;
+  --emergency-red-hover: #b91c1c;
+  --bg-slate: #F1F5F9;
+  --text-dark: #1E293B;
+  --text-muted: #64748B;
+  --card-bg: #FFFFFF;
+  --border-color: #E2E8F0;
+  --border-radius-sm: 8px;
+  --border-radius: 12px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.03);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-slate);
+  color: var(--text-dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+main {
+  flex: 1;
+}
+
+/* Navbar */
+.app-navbar {
+  background-color: var(--primary-navy) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  padding: 0.75rem 1rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #FFFFFF !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-badge {
+  background: var(--emergency-red);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.nav-link {
+  color: #E2E8F0 !important;
+  font-weight: 500;
+  font-size: 0.925rem;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Role Switcher Banner */
+.role-banner {
+  background: #091a2b;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  color: #94A3B8;
+  font-size: 0.825rem;
+  padding: 0.4rem 1rem;
+}
+
+.role-badge {
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+/* Cards */
+.app-card {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Buttons */
+.btn-emergency {
+  background-color: var(--emergency-red);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-emergency:hover, .btn-emergency:focus {
+  background-color: var(--emergency-red-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-teal {
+  background-color: var(--secondary-teal);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.btn-teal:hover {
+  background-color: var(--secondary-teal-hover);
+  color: white;
+}
+
+.btn-navy {
+  background-color: var(--primary-navy);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-navy:hover {
+  background-color: var(--primary-navy-dark);
+  color: white;
+}
+
+/* Status Badges */
+.badge-status {
+  font-size: 0.785rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-PENDING { background-color: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+.status-ACCEPTED { background-color: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE; }
+.status-FINDING_DELIVERY { background-color: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; }
+.status-DELIVERY_ASSIGNED { background-color: #CCFBF1; color: #115E59; border: 1px solid #99F6E4; }
+.status-READY_FOR_PICKUP { background-color: #CFFAFE; color: #155E75; border: 1px solid #A5F3FC; }
+.status-OUT_FOR_DELIVERY { background-color: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
+.status-DELIVERED, .status-PICKED_UP { background-color: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+.status-REJECTED, .status-EXPIRED, .status-CANCELLED { background-color: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+
+.priority-CRITICAL {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  font-weight: 700;
+  border: 1px solid #FCA5A5;
+}
+
+.priority-URGENT {
+  background-color: #FFEDD5;
+  color: #C2410C;
+  font-weight: 700;
+  border: 1px solid #FDBA74;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+.empty-state-icon {
+  font-size: 3rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+/* Loading Spinner Overlay */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.loading-overlay.active {
+  display: flex;
+}
+
+/* Toast Container */
+.toast-container {
+  z-index: 1090;
+}
+
+/* Handover Code Card */
+.handover-card {
+  background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+  color: white;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.handover-code-digits {
+  font-family: monospace;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 0.35rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 0.5rem 0;
+}
+
+/* Footer */
+footer {
+  background-color: #FFFFFF;
+  border-top: 1px solid var(--border-color);
+  padding: 1.25rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

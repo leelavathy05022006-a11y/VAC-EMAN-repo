@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Registration - Emergency Medicine Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div id="main-navbar"></div>
+
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        
+        <div class="card-premium p-4 p-md-5 shadow-sm border-0">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="/register.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+            <div>
+              <h2 class="fw-bold mb-0">Hospital & Clinical Center Registration</h2>
+              <p class="text-muted small mb-0">Join the verified emergency healthcare network</p>
+            </div>
+          </div>
+
+          <div id="alert-error" class="alert alert-danger d-none" role="alert"></div>
+          <div id="alert-success" class="alert alert-success d-none" role="alert"></div>
+
+          <form id="hospital-form" class="row g-3">
+            <div class="col-12">
+              <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2">1. Hospital Organization Details</h6>
+            </div>
+
+            <div class="col-md-7">
+              <label class="form-label fw-semibold">Hospital / Clinic Name *</label>
+              <input type="text" class="form-control" id="hospitalName" required placeholder="e.g. Apollo Speciality Hospital">
+            </div>
+
+            <div class="col-md-5">
+              <label class="form-label fw-semibold">Registration / Clinical License No *</label>
+              <input type="text" class="form-control" id="registrationNo" required placeholder="HOSP-TN-2024-001">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Facility Classification</label>
+              <select class="form-select" id="hospitalType">
+                <option value="Multi-Speciality">Multi-Speciality Hospital</option>
+                <option value="General Hospital">General Hospital</option>
+                <option value="Trauma & Emergency Center">Trauma & Emergency Center</option>
+                <option value="Speciality Clinic">Speciality Clinic</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Emergency Trauma Line Phone *</label>
+              <input type="tel" class="form-control" id="emergencyPhone" pattern="^[6-9][0-9]{9}$" required placeholder="9876543299">
+            </div>
+
+            <div class="col-12 mt-4">
+              <h6 class="fw-bold text-uppercase text-muted border-bottom pb-2">2. Authorized Administrator Login</h6>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Official Email Address *</label>
+              <input type="email" class="form-control" id="email" required placeholder="admin@hospital.org">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Administrator Contact Phone *</label>
+              <input type="tel" class="form-control" id="phone" pattern="^[6-9][0-9]{9}$" required placeholder="9876543212">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password *</label>
+              <input type="password" class="form-control" id="password" required placeholder="••••••••">
+              <div class="form-text">8-64 chars, upper, lower, number, symbol.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Confirm Password *</label>
+              <input type="password" class="form-control" id="confirmPassword" required placeholder="Re-enter password">
+            </div>
+
+            <div class="col-12 mt-4">
+              <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                <h6 class="fw-bold text-uppercase text-muted mb-0">3. Physical Location & Coordinates</h6>
+                <button type="button" class="btn btn-outline-teal btn-sm" id="btn-geo">
+                  <i class="bi bi-geo-alt-fill text-danger me-1"></i> Grab Location
+                </button>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">Hospital Address</label>
+              <input type="text" class="form-control" id="address" placeholder="Premises, Street, Area">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">City</label>
+              <input type="text" class="form-control" id="city" value="Chennai">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Pincode</label>
+              <input type="text" class="form-control" id="pincode" pattern="^[0-9]{6}$" placeholder="600006">
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label fw-semibold">Latitude</label>
+              <input type="number" step="any" class="form-control" id="latitude" placeholder="13.0569">
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label fw-semibold">Longitude</label>
+              <input type="number" step="any" class="form-control" id="longitude" placeholder="80.2514">
+            </div>
+
+            <div class="col-12 mt-4">
+              <button type="submit" id="btn-submit" class="btn btn-danger btn-lg w-100 fw-bold">
+                Register Hospital Facility
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      UI.renderNavbar(null);
+
+      document.getElementById('btn-geo').addEventListener('click', () => {
+        navigator.geolocation?.getCurrentPosition(
+          pos => {
+            document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+            document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+            UI.showToast('Hospital coordinates set', 'success');
+          },
+          () => {
+            document.getElementById('latitude').value = "13.056900";
+            document.getElementById('longitude').value = "80.251400";
+          }
+        );
+      });
+
+      const form = document.getElementById('hospital-form');
+      const errBox = document.getElementById('alert-error');
+      const succBox = document.getElementById('alert-success');
+      const submitBtn = document.getElementById('btn-submit');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errBox.classList.add('d-none');
+        succBox.classList.add('d-none');
+        submitBtn.disabled = true;
+
+        const payload = {
+          hospitalName: document.getElementById('hospitalName').value.trim(),
+          registrationNo: document.getElementById('registrationNo').value.trim(),
+          hospitalType: document.getElementById('hospitalType').value,
+          emergencyPhone: document.getElementById('emergencyPhone').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          password: document.getElementById('password').value,
+          confirmPassword: document.getElementById('confirmPassword').value,
+          address: document.getElementById('address').value.trim() || null,
+          city: document.getElementById('city').value.trim() || null,
+          pincode: document.getElementById('pincode').value.trim() || null,
+          latitude: document.getElementById('latitude').value ? parseFloat(document.getElementById('latitude').value) : null,
+          longitude: document.getElementById('longitude').value ? parseFloat(document.getElementById('longitude').value) : null
+        };
+
+        try {
+          await Api.post('/api/v1/auth/register/hospital', payload);
+          succBox.textContent = 'Hospital registered successfully! Redirecting to login...';
+          succBox.classList.remove('d-none');
+          setTimeout(() => window.location.href = '/login.html', 1200);
+        } catch (err) {
+          errBox.textContent = err.message;
+          errBox.classList.remove('d-none');
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chennai Hyperlocal Pharmacy Discovery &amp; Live Stock Explorer - EmergencyMed</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Theme CSS -->
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <!-- Chatbot CSS -->
+  <link href="/assets/css/chatbot.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #102A43;
+      --secondary-teal: #0D9488;
+      --danger-red: #DC2626;
+      --warning-amber: #D97706;
+      --bg-light: #F1F5F9;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, #0f2438 0%, #102A43 60%, #0D9488 100%);
+      color: #ffffff;
+      padding: 1.25rem 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 15px rgba(16, 42, 67, 0.12);
+    }
+
+    /* Layout structure */
+    .discovery-container {
+      display: flex;
+      flex-direction: row;
+      gap: 1.25rem;
+      height: calc(100vh - 170px);
+      min-height: 600px;
+    }
+
+    .cards-sidebar {
+      flex: 1 1 54%;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+      max-height: 100%;
+    }
+
+    .map-wrapper {
+      flex: 1 1 46%;
+      position: relative;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      height: 100%;
+    }
+
+    #pharmacy-map {
+      width: 100%;
+      height: 100%;
+      min-height: 480px;
+      z-index: 1;
+    }
+
+    /* Floating "Search This Area" Map Button */
+    .floating-search-btn {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: #102A43;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      padding: 8px 18px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s ease;
+    }
+    .floating-search-btn:hover {
+      background: #0D9488;
+      color: #ffffff;
+    }
+
+    /* Pharmacy Card Styles */
+    .pharmacy-card {
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      background-color: #ffffff;
+      padding: 1.15rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .pharmacy-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--secondary-teal);
+      box-shadow: 0 8px 20px rgba(13, 148, 136, 0.12);
+    }
+
+    .pharmacy-card.active-selected {
+      border-color: var(--secondary-teal);
+      border-width: 2px;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+      background-color: #f8fafc;
+    }
+
+    /* Radius Pills */
+    .radius-pill {
+      cursor: pointer;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      transition: all 0.15s;
+    }
+    .radius-pill.active {
+      background: var(--secondary-teal);
+      color: #ffffff;
+      border-color: var(--secondary-teal);
+    }
+
+    /* Autocomplete dropdown */
+    .autocomplete-box {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      z-index: 1050;
+      max-height: 280px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 8px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.875rem;
+    }
+    .autocomplete-item:hover {
+      background-color: #f0fdf4;
+      color: #0d9488;
+    }
+
+    /* Facility Custom Leaflet Markers */
+    .custom-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      border: 2px solid #ffffff;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .custom-marker:hover {
+      transform: scale(1.15);
+      z-index: 1000 !important;
+    }
+    .marker-pharmacy { background-color: #059669; }
+    .marker-hospital { background-color: #DC2626; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 900; font-size: 17px; }
+    .marker-clinic { background-color: #2563EB; }
+    .marker-transit { background-color: #D97706; }
+    .marker-landmark { background-color: #8B5CF6; }
+    
+    .marker-user {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #0284C7;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 0 6px rgba(2, 132, 199, 0.4);
+      animation: pulse-ring 2s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.7); }
+      70% { box-shadow: 0 0 0 14px rgba(2, 132, 199, 0); }
+      100% { box-shadow: 0 0 0 2px rgba(2, 132, 199, 0); }
+    }
+
+    /* Floating Legend */
+    .map-legend {
+      position: absolute;
+      bottom: 20px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      font-size: 0.78rem;
+      pointer-events: auto;
+      max-width: 290px;
+    }
+    .map-legend .legend-title {
+      font-weight: 700;
+      color: #102A43;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+    .legend-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 10px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .btn-facility-filter {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-facility-filter:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .btn-facility-filter.active {
+      background: #102A43;
+      color: #ffffff;
+      border-color: #102A43;
+    }
+
+    /* Responsive Mobile Handling */
+    @media (max-width: 991.98px) {
+      .discovery-container {
+        flex-direction: column;
+        height: auto;
+      }
+      .map-wrapper {
+        height: 380px;
+        order: -1;
+      }
+      .cards-sidebar {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-custom px-4">
+  <a class="navbar-brand fw-bold fs-4" href="/">
+    <i class="bi bi-heart-pulse-fill text-danger me-2"></i>EmergencyMed
+  </a>
+  <span class="navbar-text text-white-50 small d-none d-md-inline">
+    <i class="bi bi-geo-alt-fill text-warning me-1"></i> Chennai Hyperlocal Pharmacy Discovery
+  </span>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <a href="/chennai-pharmacies.html" class="nav-link active"><i class="bi bi-map me-1"></i> Chennai Discovery</a>
+    <a href="/medicine-catalogue.html" class="nav-link"><i class="bi bi-search me-1"></i> Medicine Catalogue</a>
+    <a href="/pharmacy/inventory.html" class="nav-link"><i class="bi bi-box-seam me-1"></i> Pharmacy Portal</a>
+    <a href="/admin/medicines.html" class="nav-link"><i class="bi bi-shield-lock me-1"></i> Admin Portal</a>
+  </div>
+</nav>
+
+<div class="container-fluid px-3 px-lg-4 py-3">
+
+  <!-- Header Banner & Location Bar -->
+  <div class="app-header mb-3">
+    <div class="row align-items-center gy-2">
+      <div class="col-lg-7">
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span class="badge bg-warning text-dark fw-bold">
+            <i class="bi bi-geo-alt-fill me-1"></i> Chennai &amp; Extended Suburbs
+          </span>
+          <span class="badge bg-white bg-opacity-20 text-white" id="gps-status-badge">
+            <i class="bi bi-info-circle me-1"></i> Default Location Active
+          </span>
+        </div>
+        <h3 class="fw-bold mb-1">Hyperlocal Pharmacy &amp; Emergency Stock Discovery</h3>
+        <p class="mb-0 text-white-50 small" id="user-location-summary">
+          Targeting Chennai Central &bull; Search extends to Poonamallee, Kumananchavadi, Mangadu, Iyyappanthangal, Porur, Avadi, Thirumazhisai, Kundrathur, Ambattur, and all streets.
+        </p>
+      </div>
+
+      <div class="col-lg-5 text-lg-end d-flex flex-wrap gap-2 justify-content-lg-end">
+        <button class="btn btn-warning text-dark fw-bold btn-sm px-3 shadow-sm" id="btn-use-location" onclick="handleUseCurrentLocation()">
+          <i class="bi bi-crosshair me-1"></i> Use My Current Location
+        </button>
+        <button class="btn btn-outline-light btn-sm px-3" id="btn-refresh-location" onclick="refreshUserLocation()" title="Refresh GPS Coordinates">
+          <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+        </button>
+        <button class="btn btn-light btn-sm px-3 fw-semibold text-navy" data-bs-toggle="modal" data-bs-target="#registerPharmacyModal">
+          <i class="bi bi-plus-circle me-1 text-teal"></i> Register Pharmacy
+        </button>
+        <button class="btn btn-outline-warning btn-sm px-2" id="btn-pending-badge" data-bs-toggle="modal" data-bs-target="#adminApprovalsModal" title="Admin Review Pending Registrations">
+          <i class="bi bi-shield-check me-1"></i> Admin Approvals (<span id="pending-count-badge">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card border-0 shadow-sm rounded-3 p-3 mb-3 bg-white">
+    <!-- Category Filter Bar (Pharmacies, Hospitals, Clinics, Landmarks) -->
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-3 pb-2 border-bottom">
+      <span class="small fw-bold text-navy"><i class="bi bi-funnel-fill text-teal me-1"></i>Facility Type:</span>
+      <button type="button" class="btn-facility-filter active" data-type="ALL" onclick="setCategoryFilter('ALL')">
+        <i class="bi bi-grid-fill me-1"></i>All Facilities
+      </button>
+      <button type="button" class="btn-facility-filter" data-type="PHARMACY" onclick="setCategoryFilter('PHARMACY')">
+        <i class="bi bi-capsule text-success me-1"></i>Pharmacies / Medical Shops
+      </button>
+      <button type="button" class="btn-facility-filter" data-type="HOSPITAL" onclick="setCategoryFilter('HOSPITAL')">
+        <span class="badge bg-danger p-1 me-1" style="font-size: 10px;">H</span>Hospitals (24x7 Emergency)
+      </button>
+      <button type="button" class="btn-facility-filter" data-type="CLINIC" onclick="setCategoryFilter('CLINIC')">
+        <i class="bi bi-heart-pulse-fill text-primary me-1"></i>Clinics &amp; Day Care
+      </button>
+      <button type="button" class="btn-facility-filter" data-type="LANDMARK" onclick="setCategoryFilter('LANDMARK')">
+        <i class="bi bi-geo-alt-fill text-warning me-1"></i>Landmarks &amp; Bus Stands
+      </button>
+    </div>
+
+    <div class="row g-2 align-items-center">
+
+      <!-- Hyperlocal Text Search with Autocomplete -->
+      <div class="col-lg-4 col-md-6 position-relative">
+        <label class="form-label small fw-semibold text-muted mb-1">
+          <i class="bi bi-search me-1 text-teal"></i> Street, Area, Landmark or PIN Code
+        </label>
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-geo-alt text-teal"></i></span>
+          <input type="text" id="locality-search-input" class="form-control border-start-0" 
+                 placeholder="Type area (e.g. Poonamallee, Central, 600056)..." autocomplete="off">
+          <button class="btn btn-outline-secondary" type="button" onclick="clearSearchInput()" title="Clear">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <!-- Autocomplete Suggestions Box -->
+        <div id="autocomplete-box" class="autocomplete-box shadow"></div>
+      </div>
+
+      <!-- Locality Dropdown Selector -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label small fw-semibold text-muted mb-1">
+          <i class="bi bi-buildings me-1 text-teal"></i> Quick Locality Filter
+        </label>
+        <select id="select-locality" class="form-select" onchange="handleLocalityDropdownChange()">
+          <option value="">All Chennai Localities &amp; Suburbs</option>
+          <!-- Dynamically populated via API -->
+        </select>
+      </div>
+
+      <!-- Search Distance Radius Pills: 1 km, 3 km, 5 km, 10 km, All -->
+      <div class="col-lg-3 col-md-8">
+        <label class="form-label small fw-semibold text-muted mb-1">
+          <i class="bi bi-radar me-1 text-teal"></i> Distance Filter
+        </label>
+        <div class="d-flex align-items-center gap-1 flex-wrap" id="radius-pills-container">
+          <span class="radius-pill" data-radius="1" onclick="setRadius(1)">1 km</span>
+          <span class="radius-pill" data-radius="3" onclick="setRadius(3)">3 km</span>
+          <span class="radius-pill" data-radius="5" onclick="setRadius(5)">5 km</span>
+          <span class="radius-pill active" data-radius="10" onclick="setRadius(10)">10 km</span>
+          <span class="radius-pill" data-radius="25" onclick="setRadius(25)">All (25 km)</span>
+        </div>
+      </div>
+
+      <!-- Filter Buttons & Checkboxes -->
+      <div class="col-lg-2 col-md-4 text-md-end mt-2 mt-md-0">
+        <label class="form-label small fw-semibold text-muted mb-1 d-none d-lg-block">&nbsp;</label>
+        <button class="btn btn-primary-teal w-100 fw-semibold" onclick="triggerDiscoverySearch()">
+          <i class="bi bi-funnel-fill me-1"></i> Search Now
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Secondary Quick Toggles Row -->
+    <div class="d-flex align-items-center gap-3 mt-2 pt-2 border-top flex-wrap small">
+      <span class="text-muted fw-semibold">Filters:</span>
+      <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" id="filter-verified-stock" onchange="triggerDiscoverySearch()">
+        <label class="form-check-label" for="filter-verified-stock">Verified Stock Only</label>
+      </div>
+      <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" id="filter-delivery-only" onchange="triggerDiscoverySearch()">
+        <label class="form-check-label" for="filter-delivery-only">Delivery Available</label>
+      </div>
+      <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" id="filter-open-24x7" onchange="triggerDiscoverySearch()">
+        <label class="form-check-label" for="filter-open-24x7">24/7 Open Only</label>
+      </div>
+      <div class="ms-auto text-muted" id="results-count-text">
+        Showing 0 facilities
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Dual Discovery Area (Sidebar List + Sticky Interactive Map) -->
+  <div class="discovery-container">
+
+    <!-- Left: Scrollable Pharmacy Cards List -->
+    <div class="cards-sidebar" id="cards-container">
+      <div class="text-center py-5">
+        <div class="spinner-border text-teal" role="status"></div>
+        <p class="text-muted mt-2 small">Scanning medical facilities...</p>
+      </div>
+    </div>
+
+    <!-- Right: Sticky Interactive Leaflet Map -->
+    <div class="map-wrapper">
+      <!-- Floating Button: Search This Area on Map Drag -->
+      <button class="floating-search-btn" id="btn-search-area" onclick="handleSearchThisMapArea()">
+        <i class="bi bi-arrow-repeat me-1"></i> Search This Area
+      </button>
+
+      <!-- Map Display Container -->
+      <div id="pharmacy-map"></div>
+
+      <!-- Visible Map Legend Explaining Each Symbol -->
+      <div class="map-legend">
+        <div class="legend-title"><i class="bi bi-info-circle-fill text-teal"></i> Map Symbols Legend</div>
+        <div class="legend-item">
+          <span class="legend-dot marker-pharmacy"><i class="bi bi-capsule"></i></span>
+          <span><strong>Pharmacies</strong> (Green icon)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot marker-hospital">H</span>
+          <span><strong>Hospitals</strong> (Red 'H' symbol &bull; 24x7)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot marker-clinic"><i class="bi bi-heart-pulse-fill"></i></span>
+          <span><strong>Clinics</strong> (Blue icon &bull; Consultation)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot marker-transit"><i class="bi bi-bus-front-fill"></i></span>
+          <span><strong>Bus Stands &amp; Transit</strong> (Amber)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot marker-landmark"><i class="bi bi-mortarboard-fill"></i></span>
+          <span><strong>Colleges &amp; Landmarks</strong> (Purple)</span>
+        </div>
+        <div class="legend-item" id="legend-user-item" style="display:none;">
+          <span class="legend-dot marker-user"></span>
+          <span><strong>My Current Location</strong> (Blue GPS Pin)</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Directory Attribution & Coverage Note -->
+  <div class="mt-3 p-2 bg-white rounded-2 border small text-muted d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <i class="bi bi-info-circle-fill text-teal me-1"></i>
+      <strong>Directory Coverage:</strong> OpenStreetMap, Verified Network Providers, and Authorized Registered Pharmacies. Directory coverage may be partial in newly established suburban streets.
+    </div>
+    <div>
+      Map Data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" class="text-decoration-none text-muted">OpenStreetMap</a> contributors
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Medicine Availability Drawer / Modal -->
+<div class="modal fade" id="medicineAvailabilityModal" tabindex="-1" aria-labelledby="medAvailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-navy text-white" style="background-color: var(--primary-navy);">
+        <div>
+          <h5 class="modal-title fw-bold" id="medAvailModalLabel">
+            <i class="bi bi-capsule-pill text-teal me-2"></i>Medicine Availability
+          </h5>
+          <div class="small text-white-50" id="medAvailPharmacyTitle">Loading pharmacy...</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        
+        <!-- Stock Verification Alert -->
+        <div id="medAvailNoticeBanner" class="alert alert-info py-2 small mb-3">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Filter within medicine modal -->
+        <div class="input-group input-group-sm mb-3">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" id="med-modal-search" class="form-control" placeholder="Filter medicines in this pharmacy (e.g. Paracetamol, Metformin)..." oninput="filterModalMedicines()">
+        </div>
+
+        <div id="medAvailContent">
+          <div class="text-center py-4">
+            <div class="spinner-border text-teal" role="status"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <a id="modal-call-btn" href="#" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-telephone-fill me-1"></i> Call Pharmacy
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Pharmacy Full Details Modal -->
+<div class="modal fade" id="pharmacyDetailsModal" tabindex="-1" aria-labelledby="pharmDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-navy text-white" style="background-color: var(--primary-navy);">
+        <h5 class="modal-title fw-bold" id="pharmDetailsModalLabel">
+          <i class="bi bi-hospital text-warning me-2"></i>Pharmacy Profile
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="pharmacyDetailsBody">
+        <div class="text-center py-4"><div class="spinner-border text-teal"></div></div>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Register Pharmacy Modal -->
+<div class="modal fade" id="registerPharmacyModal" tabindex="-1" aria-labelledby="regPharmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-navy text-white" style="background-color: var(--primary-navy);">
+        <h5 class="modal-title fw-bold" id="regPharmModalLabel">
+          <i class="bi bi-plus-circle-fill text-warning me-2"></i>Register Local Pharmacy (Network Verification)
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="register-pharmacy-form" onsubmit="handlePharmacyRegistration(event)">
+        <div class="modal-body p-4">
+          <div class="alert alert-warning py-2 small mb-3">
+            <i class="bi bi-shield-exclamation me-1"></i>
+            <strong>Verification Policy:</strong> Newly submitted pharmacies are reviewed by network administrators before verified medicine inventory can be published. Provide legitimate drug license details.
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Pharmacy Name *</label>
+              <input type="text" name="name" class="form-control" required placeholder="e.g. Balaji Medicals">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Contact Phone Number *</label>
+              <input type="tel" name="contactPhone" class="form-control" required placeholder="e.g. 044-26272211 or 9840123456">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Full Address *</label>
+              <input type="text" name="address" class="form-control" required placeholder="Door No, Street Name, Landmark">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Locality / Suburb *</label>
+              <input type="text" name="locality" class="form-control" required placeholder="e.g. Poonamallee / Mangadu">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">City *</label>
+              <input type="text" name="city" class="form-control" value="Chennai" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">PIN Code</label>
+              <input type="text" name="postalCode" class="form-control" placeholder="e.g. 600056">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Latitude *</label>
+              <div class="input-group">
+                <input type="number" step="0.000001" name="latitude" id="reg-lat" class="form-control" required>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="fillCurrentCoordsForReg()">Current</button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Longitude *</label>
+              <input type="number" step="0.000001" name="longitude" id="reg-lng" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Drug License Number (DL-20B / DL-21B)</label>
+              <input type="text" name="licenseNumber" class="form-control" placeholder="e.g. TN/CHE/20B/12345">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Operating Hours</label>
+              <input type="text" name="openingHours" class="form-control" placeholder="e.g. 08:00 AM - 10:30 PM or 24x7">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Pharmacy Website (Optional)</label>
+              <input type="url" name="website" class="form-control" placeholder="https://...">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Authorized Staff Email</label>
+              <input type="email" name="email" class="form-control" placeholder="pharmacist@example.com">
+            </div>
+
+            <!-- Delivery settings -->
+            <div class="col-12 pt-2 border-top">
+              <h6 class="fw-bold small text-navy mb-2">Delivery &amp; Operating Settings</h6>
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <div class="form-check mt-1">
+                    <input class="form-check-input" type="checkbox" name="deliveryAvailable" id="reg-delivery">
+                    <label class="form-check-label small fw-semibold" for="reg-delivery">Offers Local Delivery</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check mt-1">
+                    <input class="form-check-input" type="checkbox" name="opens24x7" id="reg-24x7">
+                    <label class="form-check-label small fw-semibold" for="reg-24x7">Opens 24x7</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <input type="number" step="0.5" name="deliveryRadiusKm" class="form-control form-control-sm" placeholder="Delivery Radius (km, e.g. 5.0)">
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer bg-light py-2">
+          <button type="submit" class="btn btn-primary-teal btn-sm px-4 fw-semibold" id="btn-submit-reg">Submit for Verification</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Admin Approvals Modal -->
+<div class="modal fade" id="adminApprovalsModal" tabindex="-1" aria-labelledby="adminApprModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-navy text-white" style="background-color: var(--primary-navy);">
+        <h5 class="modal-title fw-bold" id="adminApprModalLabel">
+          <i class="bi bi-shield-check text-warning me-2"></i>Admin Approval &amp; Pharmacy Verification
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="adminApprovalsBody">
+        <div class="text-center py-4"><div class="spinner-border text-teal"></div></div>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications container -->
+<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;"></div>
+
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/ui.js"></script>
+
+<script>
+// ============================================================================
+// STATE VARIABLES
+// ============================================================================
+const DEFAULT_COORDS = { lat: 13.0827, lng: 80.2707, locality: "Chennai Central" };
+let currentCoords = { lat: DEFAULT_COORDS.lat, lng: DEFAULT_COORDS.lng };
+let selectedRadiusKm = 10.0;
+let selectedFacilityType = 'ALL';
+let hasGrantedUserLocation = false;
+let userLocMarker = null;
+let radiusCircle = null;
+let pharmacyMarkersLayer = null;
+let mapInstance = null;
+let currentPharmaciesList = [];
+let activePharmacyId = null;
+let lastSearchedCenter = { lat: DEFAULT_COORDS.lat, lng: DEFAULT_COORDS.lng };
+let currentModalMedicines = [];
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  initLeafletMap();
+  loadChennaiLocalitiesDropdown();
+  setupAutocompleteListeners();
+  triggerDiscoverySearch();
+  loadPendingApprovalCount();
+});
+
+// ============================================================================
+// 1. LEAFLET MAP INITIALIZATION & CONTROLS
+// ============================================================================
+function initLeafletMap() {
+  mapInstance = L.map('pharmacy-map', {
+    zoomControl: true,
+    attributionControl: true
+  }).setView([currentCoords.lat, currentCoords.lng], 12);
+
+  // Permitted OpenStreetMap Tile Layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(mapInstance);
+
+  pharmacyMarkersLayer = L.layerGroup().addTo(mapInstance);
+
+  // Monitor map movements to show "Search This Area" floating button
+  mapInstance.on('moveend', () => {
+    const center = mapInstance.getCenter();
+    const dist = calculateDistance(center.lat, center.lng, lastSearchedCenter.lat, lastSearchedCenter.lng);
+    const searchBtn = document.getElementById('btn-search-area');
+    if (dist > 1.2) {
+      searchBtn.style.display = 'block';
+    } else {
+      searchBtn.style.display = 'none';
+    }
+  });
+}
+
+function setCategoryFilter(type) {
+  selectedFacilityType = type;
+  document.querySelectorAll('.btn-facility-filter').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-type') === type);
+  });
+  triggerDiscoverySearch();
+}
+
+function setRadius(radius) {
+  selectedRadiusKm = radius;
+  document.querySelectorAll('.radius-pill').forEach(el => {
+    el.classList.toggle('active', parseFloat(el.getAttribute('data-radius')) === radius);
+  });
+  triggerDiscoverySearch();
+}
+
+function updateUserLocationMapPin(lat, lng, radiusKm, localityText) {
+  if (!mapInstance) return;
+
+  if (userLocMarker) {
+    mapInstance.removeLayer(userLocMarker);
+    userLocMarker = null;
+  }
+  if (radiusCircle) {
+    mapInstance.removeLayer(radiusCircle);
+    radiusCircle = null;
+  }
+
+  // Display user location marker ONLY if user granted location permission
+  if (hasGrantedUserLocation) {
+    const userIcon = L.divIcon({
+      className: 'marker-user',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
+    });
+
+    userLocMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 })
+      .bindPopup(`<div style="font-family:'Inter',sans-serif;"><strong><i class="bi bi-crosshair text-primary me-1"></i>My Current Location</strong><br><small class="text-muted">${localityText || 'Detected GPS Position'}</small></div>`)
+      .addTo(mapInstance);
+
+    radiusCircle = L.circle([lat, lng], {
+      radius: radiusKm * 1000,
+      color: '#0284C7',
+      fillColor: '#0284C7',
+      fillOpacity: 0.08,
+      weight: 2,
+      dashArray: '4, 4'
+    }).addTo(mapInstance);
+  }
+}
+
+// ============================================================================
+// 2. REAL-TIME USER LOCATION (GEOLOCATION API WITH PERMISSION HANDLING)
+// ============================================================================
+function handleUseCurrentLocation() {
+  if (!navigator.geolocation) {
+    showToast('Browser Geolocation is not supported on this device', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btn-use-location');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Requesting GPS...';
+
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 9000,
+    maximumAge: 30000
+  };
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-crosshair me-1"></i> Current Location Active';
+      btn.className = 'btn btn-success text-white fw-bold btn-sm px-3 shadow-sm';
+
+      hasGrantedUserLocation = true;
+      currentCoords.lat = position.coords.latitude;
+      currentCoords.lng = position.coords.longitude;
+
+      document.getElementById('gps-status-badge').className = 'badge bg-success text-white';
+      document.getElementById('gps-status-badge').innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i> Live GPS Position Active';
+
+      const legendUserItem = document.getElementById('legend-user-item');
+      if (legendUserItem) legendUserItem.style.display = 'flex';
+
+      showToast('Location permission granted! Showing facilities near your position.', 'success');
+      triggerDiscoverySearch();
+    },
+    (error) => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-crosshair me-1"></i> Use My Current Location';
+      hasGrantedUserLocation = false;
+
+      let msg = 'Location access was not granted.';
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          msg = 'Location permission was denied. Defaulting to Chennai view. You can also search by area.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          msg = 'Location information is currently unavailable. Using default Chennai view.';
+          break;
+        case error.TIMEOUT:
+          msg = 'Location request timed out. Retaining default Chennai view.';
+          break;
+      }
+      showToast(msg, 'warning');
+    },
+    options
+  );
+}
+
+function refreshUserLocation() {
+  handleUseCurrentLocation();
+}
+
+// ============================================================================
+// 3. HYPERLOCAL DISCOVERY, SEARCH & DEDUPLICATION
+// ============================================================================
+async function triggerDiscoverySearch() {
+  const container = document.getElementById('cards-container');
+  container.innerHTML = `
+    <div class="text-center py-5">
+      <div class="spinner-border text-teal" role="status"></div>
+      <p class="text-muted mt-2 small">Scanning medical facilities...</p>
+    </div>
+  `;
+
+  document.getElementById('btn-search-area').style.display = 'none';
+  lastSearchedCenter = { lat: currentCoords.lat, lng: currentCoords.lng };
+
+  const localityFilter = document.getElementById('select-locality').value;
+  const verifiedOnly = document.getElementById('filter-verified-stock').checked;
+  const deliveryOnly = document.getElementById('filter-delivery-only').checked;
+  const open24x7Only = document.getElementById('filter-open-24x7').checked;
+  const queryText = document.getElementById('locality-search-input').value.trim();
+
+  try {
+    let url = `/pharmacies/discover?latitude=${currentCoords.lat}&longitude=${currentCoords.lng}&radiusKm=${selectedRadiusKm}`;
+    if (selectedFacilityType && selectedFacilityType !== 'ALL') url += `&facilityType=${encodeURIComponent(selectedFacilityType)}`;
+    if (localityFilter) url += `&locality=${encodeURIComponent(localityFilter)}`;
+    if (verifiedOnly) url += `&verifiedStockOnly=true`;
+    if (deliveryOnly) url += `&deliveryOnly=true`;
+    if (open24x7Only) url += `&open24x7Only=true`;
+
+    const data = await apiRequest(url);
+
+    let pharmacies = data.pharmacies || [];
+
+    // Client-side text filter if queryText provided
+    if (queryText) {
+      const qLower = queryText.toLowerCase();
+      pharmacies = pharmacies.filter(p => 
+        p.name.toLowerCase().includes(qLower) ||
+        p.locality.toLowerCase().includes(qLower) ||
+        p.address.toLowerCase().includes(qLower) ||
+        (p.postalCode && p.postalCode.includes(qLower)) ||
+        (p.facilityType && p.facilityType.toLowerCase().includes(qLower))
+      );
+    }
+
+    currentPharmaciesList = pharmacies;
+
+    // Update location summary text
+    if (data.detectedLocality) {
+      document.getElementById('user-location-summary').innerHTML = 
+        `<strong>Detected Area:</strong> ${data.detectedLocality} &bull; Radius: ${selectedRadiusKm} km &bull; Center: ${currentCoords.lat.toFixed(4)}, ${currentCoords.lng.toFixed(4)}`;
+    }
+
+    renderPharmacyCards(pharmacies);
+    updateMapMarkers(pharmacies);
+    updateUserLocationMapPin(currentCoords.lat, currentCoords.lng, selectedRadiusKm, data.detectedLocality);
+
+    // Pan map to fit markers
+    if (pharmacies.length > 0) {
+      const markersToFit = userLocMarker ? [userLocMarker, ...pharmacyMarkersLayer.getLayers()] : [...pharmacyMarkersLayer.getLayers()];
+      const group = new L.featureGroup(markersToFit);
+      mapInstance.fitBounds(group.getBounds().pad(0.12));
+    } else {
+      mapInstance.setView([currentCoords.lat, currentCoords.lng], getZoomForRadius(selectedRadiusKm));
+    }
+
+    document.getElementById('results-count-text').innerText = `Found ${pharmacies.length} facilities`;
+
+  } catch (err) {
+    console.error('Discovery error:', err);
+    container.innerHTML = `
+      <div class="alert alert-danger my-4 p-4 text-center">
+        <i class="bi bi-exclamation-triangle-fill fs-3 text-danger d-block mb-2"></i>
+        <h6>Discovery Error</h6>
+        <p class="small mb-2">${err.message || 'Unable to scan facilities at this location.'}</p>
+        <button class="btn btn-outline-danger btn-sm" onclick="triggerDiscoverySearch()">Retry Search</button>
+      </div>
+    `;
+  }
+}
+
+function handleSearchThisMapArea() {
+  const center = mapInstance.getCenter();
+  currentCoords.lat = center.lat;
+  currentCoords.lng = center.lng;
+  triggerDiscoverySearch();
+}
+
+function getZoomForRadius(km) {
+  if (km <= 1.0) return 15;
+  if (km <= 3.0) return 14;
+  if (km <= 5.0) return 13;
+  if (km <= 10.0) return 12;
+  return 11;
+}
+
+// ============================================================================
+// 4. RENDERING PHARMACY & FACILITY CARDS
+// ============================================================================
+function renderPharmacyCards(pharmacies) {
+  const container = document.getElementById('cards-container');
+
+  if (!pharmacies || pharmacies.length === 0) {
+    container.innerHTML = `
+      <div class="card border-0 shadow-sm p-4 text-center my-4 bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-geo-alt-fill text-muted" style="font-size: 3rem;"></i>
+          <h5 class="fw-bold mt-2 text-navy">No Facilities Found within ${selectedRadiusKm} km</h5>
+          <p class="text-muted small mb-4" style="max-width: 420px; margin: 0 auto;">
+            No verified facilities matched your current filter within this radius. Try widening your distance filter or choosing "All Facilities".
+          </p>
+          <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <button class="btn btn-primary-teal btn-sm fw-semibold" onclick="setRadius(5)">
+              <i class="bi bi-arrows-angle-expand me-1"></i> Expand to 5 km
+            </button>
+            <button class="btn btn-outline-teal btn-sm fw-semibold" onclick="setRadius(10)">
+              <i class="bi bi-arrows-angle-expand me-1"></i> Expand to 10 km
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetToChennaiCenter()">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Reset to Chennai Center
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = pharmacies.map(p => {
+    const type = (p.facilityType || 'PHARMACY').toUpperCase();
+
+    // 1. Facility Category Badge
+    let typeBadgeHtml = '';
+    if (type === 'HOSPITAL') {
+      typeBadgeHtml = `<span class="badge bg-danger"><i class="bi bi-hospital-fill me-1"></i>Hospital</span>`;
+    } else if (type === 'CLINIC') {
+      typeBadgeHtml = `<span class="badge bg-primary"><i class="bi bi-heart-pulse-fill me-1"></i>Clinic</span>`;
+    } else if (type === 'TRANSIT') {
+      typeBadgeHtml = `<span class="badge bg-warning text-dark"><i class="bi bi-bus-front-fill me-1"></i>Transit Hub</span>`;
+    } else if (type === 'EDUCATION' || type === 'LANDMARK') {
+      typeBadgeHtml = `<span class="badge" style="background:#8B5CF6; color:#fff;"><i class="bi bi-mortarboard-fill me-1"></i>Landmark</span>`;
+    } else {
+      typeBadgeHtml = `<span class="badge bg-success"><i class="bi bi-capsule me-1"></i>Pharmacy</span>`;
+    }
+
+    // 2. Stock Status Badge (Only relevant for pharmacies or facilities with medicine stock)
+    let stockBadgeHtml = '';
+    if (type === 'PHARMACY') {
+      if (p.stockStatus === 'VERIFIED_LIVE') {
+        stockBadgeHtml = `<span class="badge bg-success"><i class="bi bi-shield-check me-1"></i>Live Stock (${p.availableMedicinesCount} Available)</span>`;
+      } else if (p.stockStatus === 'SAMPLE_DEMO') {
+        stockBadgeHtml = `<span class="badge bg-info text-dark"><i class="bi bi-flask me-1"></i>Demo Sample Stock (${p.availableMedicinesCount})</span>`;
+      } else if (p.stockStatus === 'OUT_OF_STOCK') {
+        stockBadgeHtml = `<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Out of Emergency Stock</span>`;
+      } else {
+        stockBadgeHtml = `<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Stock Not Verified</span>`;
+      }
+    } else if (type === 'HOSPITAL') {
+      stockBadgeHtml = `<span class="badge bg-danger-subtle text-danger border border-danger"><i class="bi bi-lightning-charge-fill me-1"></i>24x7 Emergency Trauma</span>`;
+    }
+
+    // 3. Delivery Badge
+    let deliveryHtml = '';
+    if (p.deliveryStatus === 'PARTNER_AVAILABLE') {
+      deliveryHtml = `<span class="text-success fw-bold"><i class="bi bi-bicycle me-1"></i>Delivery (~${p.estimatedDeliveryMinutes || 30} mins &bull; ₹${p.deliveryFee || 30})</span>`;
+    } else if (p.deliveryAvailable) {
+      deliveryHtml = `<span class="text-primary fw-medium"><i class="bi bi-box me-1"></i>Delivery Supported</span>`;
+    } else {
+      deliveryHtml = `<span class="text-secondary"><i class="bi bi-person-walking me-1"></i>Walk-in / Self-Pickup</span>`;
+    }
+
+    const distText = p.distanceKm != null ? `${p.distanceKm} km away` : 'Chennai';
+
+    // 4. Primary Action Button
+    let primaryActionBtn = '';
+    if (type === 'PHARMACY') {
+      primaryActionBtn = `
+        <button class="btn btn-sm btn-primary-teal flex-grow-1" onclick="openMedicineAvailabilityModal(event, ${p.id})">
+          <i class="bi bi-capsule me-1"></i> Check Medicine Stock
+        </button>
+      `;
+    } else if (type === 'HOSPITAL') {
+      primaryActionBtn = `
+        <a href="tel:${p.contactPhone || ''}" class="btn btn-sm btn-danger flex-grow-1" onclick="event.stopPropagation()">
+          <i class="bi bi-telephone-fill me-1"></i> Emergency Hotline (${p.contactPhone || '24x7'})
+        </a>
+      `;
+    } else if (type === 'CLINIC') {
+      primaryActionBtn = `
+        <a href="tel:${p.contactPhone || ''}" class="btn btn-sm btn-primary flex-grow-1" onclick="event.stopPropagation()">
+          <i class="bi bi-telephone me-1"></i> Call Clinic
+        </a>
+      `;
+    } else {
+      primaryActionBtn = `
+        <a href="${p.googleMapsUrl}" target="_blank" class="btn btn-sm btn-outline-primary flex-grow-1" onclick="event.stopPropagation()">
+          <i class="bi bi-map me-1"></i> View Landmark &amp; Transit Info
+        </a>
+      `;
+    }
+
+    return `
+      <div class="pharmacy-card mb-3 ${activePharmacyId === p.id ? 'active-selected' : ''}" 
+           id="card-pharmacy-${p.id}" 
+           onclick="selectPharmacyCard(${p.id}, ${p.latitude}, ${p.longitude})">
+        
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <div class="d-flex flex-wrap gap-1 align-items-center">
+            ${typeBadgeHtml}
+            <span class="badge bg-primary-subtle text-primary fw-bold"><i class="bi bi-geo-alt me-1"></i>${p.locality}</span>
+            <span class="badge bg-light text-dark border fw-bold">${distText}</span>
+            ${p.opens24x7 ? '<span class="badge bg-dark text-warning fw-bold">24x7</span>' : ''}
+          </div>
+          <div>${stockBadgeHtml}</div>
+        </div>
+
+        <h5 class="fw-bold text-navy mb-1">${p.name}</h5>
+        <p class="small text-muted mb-2"><i class="bi bi-building me-1"></i>${p.address}, ${p.city} - ${p.postalCode || ''}</p>
+
+        <div class="small vstack gap-1 mb-3 text-secondary">
+          <div><i class="bi bi-telephone-fill text-primary me-1"></i> <strong>Contact Phone:</strong> ${p.contactPhone ? `<a href="tel:${p.contactPhone}" class="text-decoration-none fw-bold">${p.contactPhone}</a>` : 'Not listed'}</div>
+          <div><i class="bi bi-clock-fill text-warning me-1"></i> <strong>Operating Hours:</strong> ${p.openingHours || 'Standard Hours'}</div>
+          <div><i class="bi bi-truck text-teal me-1"></i> <strong>Service Mode:</strong> ${deliveryHtml}</div>
+          <div class="text-muted"><i class="bi bi-patch-check text-muted me-1"></i> <strong>Verified Source:</strong> ${p.dataSource} ${p.licenseNumber ? `&bull; Reg: ${p.licenseNumber}` : ''}</div>
+        </div>
+
+        <!-- Working Actions -->
+        <div class="d-flex gap-2 flex-wrap pt-2 border-top">
+          ${primaryActionBtn}
+
+          <a href="${p.googleMapsUrl}" target="_blank" class="btn btn-sm btn-outline-success" onclick="event.stopPropagation()">
+            <i class="bi bi-map me-1"></i> Directions
+          </a>
+
+          <button class="btn btn-sm btn-outline-secondary" onclick="openPharmacyDetailsModal(event, ${p.id})">
+            <i class="bi bi-info-circle"></i>
+          </button>
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================================
+// 5. MAP MARKERS SYNCHRONIZATION WITH DIFFERENT LOCATION SYMBOLS
+// ============================================================================
+function updateMapMarkers(pharmacies) {
+  if (!pharmacyMarkersLayer) return;
+  pharmacyMarkersLayer.clearLayers();
+
+  pharmacies.forEach(p => {
+    let markerColorClass = 'marker-pharmacy';
+    let iconChar = '<i class="bi bi-capsule"></i>';
+    let categoryTitle = 'Pharmacy';
+
+    const type = (p.facilityType || 'PHARMACY').toUpperCase();
+
+    if (type === 'HOSPITAL') {
+      markerColorClass = 'marker-hospital';
+      iconChar = 'H';
+      categoryTitle = 'Hospital (24/7 Emergency)';
+    } else if (type === 'CLINIC') {
+      markerColorClass = 'marker-clinic';
+      iconChar = '<i class="bi bi-heart-pulse-fill"></i>';
+      categoryTitle = 'Clinic / Day Care';
+    } else if (type === 'TRANSIT') {
+      markerColorClass = 'marker-transit';
+      iconChar = '<i class="bi bi-bus-front-fill"></i>';
+      categoryTitle = 'Bus Stand / Transit';
+    } else if (type === 'EDUCATION' || type === 'LANDMARK') {
+      markerColorClass = 'marker-landmark';
+      iconChar = '<i class="bi bi-mortarboard-fill"></i>';
+      categoryTitle = 'Landmark / College';
+    } else {
+      // Pharmacy / Medical Shop
+      markerColorClass = 'marker-pharmacy';
+      iconChar = '<i class="bi bi-plus-lg"></i>';
+      categoryTitle = 'Pharmacy / Medical Shop';
+    }
+
+    const customIcon = L.divIcon({
+      className: `custom-marker ${markerColorClass}`,
+      html: iconChar,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -18]
+    });
+
+    const marker = L.marker([p.latitude, p.longitude], { icon: customIcon });
+
+    const distText = p.distanceKm != null ? `${p.distanceKm} km away` : '';
+    
+    // Popup action buttons
+    let actionBtnHtml = '';
+    if (type === 'PHARMACY') {
+      actionBtnHtml = `<button class="btn btn-primary-teal btn-sm w-100 py-1" onclick="openMedicineAvailabilityModal(null, ${p.id})"><i class="bi bi-capsule me-1"></i>Check Medicine Stock</button>`;
+    } else if (type === 'HOSPITAL') {
+      actionBtnHtml = `<a href="tel:${p.contactPhone || ''}" class="btn btn-danger btn-sm w-100 py-1"><i class="bi bi-telephone-fill me-1"></i>Emergency Hotline</a>`;
+    } else if (type === 'CLINIC') {
+      actionBtnHtml = `${p.contactPhone ? `<a href="tel:${p.contactPhone}" class="btn btn-primary btn-sm w-100 py-1"><i class="bi bi-telephone me-1"></i>Call Clinic</a>` : ''}`;
+    }
+
+    const typeBadgeBg = type === 'HOSPITAL' ? 'bg-danger' : 
+                        type === 'CLINIC' ? 'bg-primary' : 
+                        type === 'TRANSIT' ? 'bg-warning text-dark' : 
+                        type === 'LANDMARK' || type === 'EDUCATION' ? 'bg-purple' : 'bg-success';
+    const typeBadgeStyle = (type === 'LANDMARK' || type === 'EDUCATION') ? 'background:#8B5CF6; color:#fff;' : '';
+
+    const popupHtml = `
+      <div style="min-width: 220px; font-family: 'Inter', sans-serif;">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="badge ${typeBadgeBg}" style="${typeBadgeStyle}">${categoryTitle}</span>
+          ${distText ? `<span class="badge bg-light text-dark border">${distText}</span>` : ''}
+        </div>
+        <h6 class="fw-bold mb-1 text-navy">${p.name}</h6>
+        <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1 text-teal"></i>${p.address}, ${p.locality}</p>
+        <div class="small mb-2">
+          <strong>Phone:</strong> ${p.contactPhone ? `<a href="tel:${p.contactPhone}">${p.contactPhone}</a>` : 'N/A'}<br>
+          <strong>Hours:</strong> ${p.openingHours || 'Standard'}<br>
+          ${type === 'PHARMACY' ? `<strong>Stock Status:</strong> ${p.stockStatus ? p.stockStatus.replace('_', ' ') : 'VERIFIED'}` : ''}
+        </div>
+        <div class="d-flex flex-column gap-1">
+          ${actionBtnHtml}
+          <a href="${p.googleMapsUrl}" target="_blank" class="btn btn-outline-success btn-sm w-100 py-1"><i class="bi bi-map me-1"></i>Get Directions</a>
+        </div>
+      </div>
+    `;
+
+    marker.bindPopup(popupHtml);
+    marker.on('click', () => {
+      highlightSelectedCard(p.id);
+    });
+
+    pharmacyMarkersLayer.addLayer(marker);
+  });
+}
+
+function selectPharmacyCard(id, lat, lng) {
+  activePharmacyId = id;
+  highlightSelectedCard(id);
+
+  if (mapInstance) {
+    mapInstance.flyTo([lat, lng], 15, { animate: true, duration: 0.8 });
+    
+    // Open corresponding popup
+    pharmacyMarkersLayer.eachLayer(layer => {
+      if (layer.getLatLng && 
+          Math.abs(layer.getLatLng().lat - lat) < 0.0001 && 
+          Math.abs(layer.getLatLng().lng - lng) < 0.0001) {
+        layer.openPopup();
+      }
+    });
+  }
+}
+
+function highlightSelectedCard(id) {
+  document.querySelectorAll('.pharmacy-card').forEach(el => el.classList.remove('active-selected'));
+  const card = document.getElementById(`card-pharmacy-${id}`);
+  if (card) {
+    card.classList.add('active-selected');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ============================================================================
+// 6. AUTOCOMPLETE & LOCALITY SUGGESTIONS
+// ============================================================================
+function setupAutocompleteListeners() {
+  const input = document.getElementById('locality-search-input');
+  const box = document.getElementById('autocomplete-box');
+  let timeout = null;
+
+  input.addEventListener('input', (e) => {
+    clearTimeout(timeout);
+    const q = e.target.value.trim();
+    if (q.length < 2) {
+      box.style.display = 'none';
+      return;
+    }
+
+    timeout = setTimeout(async () => {
+      try {
+        const list = await apiRequest(`/pharmacies/geocode-suggestions?query=${encodeURIComponent(q)}`);
+        if (!list || list.length === 0) {
+          box.innerHTML = '<div class="autocomplete-item text-muted">No matching streets or neighbourhoods found</div>';
+          box.style.display = 'block';
+          return;
+        }
+
+        box.innerHTML = list.map(item => `
+          <div class="autocomplete-item" onclick="selectAutocompleteSuggestion(${item.latitude}, ${item.longitude}, '${escapeHtml(item.name)}', '${escapeHtml(item.postalCode || '')}')">
+            <div class="fw-semibold text-navy"><i class="bi bi-geo-alt me-1 text-teal"></i>${item.name}</div>
+            <div class="small text-muted">${item.formattedAddress}</div>
+          </div>
+        `).join('');
+        box.style.display = 'block';
+      } catch (err) {
+        console.warn('Autocomplete fetch failed:', err);
+      }
+    }, 280);
+  });
+
+  // Hide autocomplete on click outside
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !box.contains(e.target)) {
+      box.style.display = 'none';
+    }
+  });
+}
+
+function selectAutocompleteSuggestion(lat, lng, name, postalCode) {
+  document.getElementById('locality-search-input').value = name + (postalCode ? ` (${postalCode})` : '');
+  document.getElementById('autocomplete-box').style.display = 'none';
+
+  currentCoords.lat = lat;
+  currentCoords.lng = lng;
+
+  showToast(`Navigated to ${name}. Scanning radius...`, 'info');
+  triggerDiscoverySearch();
+}
+
+function clearSearchInput() {
+  document.getElementById('locality-search-input').value = '';
+  document.getElementById('autocomplete-box').style.display = 'none';
+  triggerDiscoverySearch();
+}
+
+async function loadChennaiLocalitiesDropdown() {
+  try {
+    const list = await apiRequest('/pharmacies/localities?city=Chennai');
+    const select = document.getElementById('select-locality');
+    
+    // Default fallback list in case database is just initializing
+    const defaultLocalities = ["Poonamallee", "Kumananchavadi", "Mangadu", "Iyyappanthangal", "Porur", "Avadi", "Thirumazhisai", "Nazarathpet", "Kundrathur", "Ambattur", "Pallavaram", "Chromepet", "Tambaram", "Guindy", "T. Nagar", "Anna Nagar", "Velachery", "Adyar", "Mylapore"];
+    const merged = Array.from(new Set([...(list || []), ...defaultLocalities])).sort();
+
+    select.innerHTML = '<option value="">All Chennai Localities &amp; Suburbs</option>' + 
+      merged.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+  } catch (err) {
+    console.warn('Failed to load localities:', err);
+  }
+}
+
+function handleLocalityDropdownChange() {
+  const loc = document.getElementById('select-locality').value;
+  if (!loc) {
+    triggerDiscoverySearch();
+    return;
+  }
+
+  // Pre-center map coordinates if selected locality is known
+  const curated = {
+    "Poonamallee": { lat: 13.0489, lng: 80.1132 },
+    "Kumananchavadi": { lat: 13.0510, lng: 80.1310 },
+    "Mangadu": { lat: 13.0425, lng: 80.1205 },
+    "Iyyappanthangal": { lat: 13.0390, lng: 80.1415 },
+    "Porur": { lat: 13.0382, lng: 80.1565 },
+    "Avadi": { lat: 13.1147, lng: 80.1018 },
+    "Thirumazhisai": { lat: 13.0545, lng: 80.0630 },
+    "Nazarathpet": { lat: 13.0512, lng: 80.0925 },
+    "Kundrathur": { lat: 13.0035, lng: 80.0965 },
+    "Ambattur": { lat: 13.1143, lng: 80.1548 },
+    "Pallavaram": { lat: 12.9675, lng: 80.1491 },
+    "Chromepet": { lat: 12.9516, lng: 80.1402 },
+    "Tambaram": { lat: 12.9249, lng: 80.1000 },
+    "Guindy": { lat: 13.0067, lng: 80.2020 },
+    "T. Nagar": { lat: 13.0418, lng: 80.2341 },
+    "Anna Nagar": { lat: 13.0850, lng: 80.2101 },
+    "Velachery": { lat: 12.9781, lng: 80.2206 },
+    "Adyar": { lat: 13.0012, lng: 80.2565 },
+    "Mylapore": { lat: 13.0339, lng: 80.2676 }
+  };
+
+  if (curated[loc]) {
+    currentCoords.lat = curated[loc].lat;
+    currentCoords.lng = curated[loc].lng;
+  }
+
+  triggerDiscoverySearch();
+}
+
+function resetToChennaiCenter() {
+  currentCoords.lat = DEFAULT_COORDS.lat;
+  currentCoords.lng = DEFAULT_COORDS.lng;
+  selectedRadiusKm = 10.0;
+  document.getElementById('locality-search-input').value = '';
+  document.getElementById('select-locality').value = '';
+  setRadius(10);
+}
+
+// ============================================================================
+// 7. MEDICINE AVAILABILITY MODAL (LIVE VS SAMPLE VS UNVERIFIED)
+// ============================================================================
+async function openMedicineAvailabilityModal(event, pharmacyId) {
+  if (event) event.stopPropagation();
+
+  const pharmacy = currentPharmaciesList.find(p => p.id === pharmacyId);
+  const titleEl = document.getElementById('medAvailPharmacyTitle');
+  const bannerEl = document.getElementById('medAvailNoticeBanner');
+  const contentEl = document.getElementById('medAvailContent');
+  const callBtn = document.getElementById('modal-call-btn');
+
+  if (pharmacy) {
+    titleEl.innerText = `${pharmacy.name} &bull; ${pharmacy.locality}`;
+    callBtn.href = pharmacy.contactPhone ? `tel:${pharmacy.contactPhone}` : '#';
+    callBtn.style.display = pharmacy.contactPhone ? 'inline-block' : 'none';
+
+    if (pharmacy.stockStatus === 'VERIFIED_LIVE') {
+      bannerEl.className = 'alert alert-success py-2 small mb-3';
+      bannerEl.innerHTML = '<i class="bi bi-shield-check me-1"></i> <strong>Live Inventory:</strong> Actual stock quantity from pharmacy system. Available = (Total &minus; Reserved).';
+    } else if (pharmacy.stockStatus === 'SAMPLE_DEMO') {
+      bannerEl.className = 'alert alert-info py-2 small mb-3';
+      bannerEl.innerHTML = '<i class="bi bi-flask me-1"></i> <strong>Demo Sample Stock:</strong> Illustrative medicine batch records for network demonstration.';
+    } else {
+      bannerEl.className = 'alert alert-warning py-2 small mb-3';
+      bannerEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Stock Not Verified:</strong> This pharmacy is mapped in public directory but has not published real-time electronic inventory. Call pharmacy to confirm stock.';
+    }
+  }
+
+  contentEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-teal"></div></div>';
+  document.getElementById('med-modal-search').value = '';
+
+  const modal = new bootstrap.Modal(document.getElementById('medicineAvailabilityModal'));
+  modal.show();
+
+  try {
+    const list = await apiRequest(`/pharmacies/${pharmacyId}/medicine-availability`);
+    currentModalMedicines = list || [];
+    renderModalMedicines(currentModalMedicines, pharmacy);
+  } catch (err) {
+    contentEl.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  }
+}
+
+function renderModalMedicines(list, pharmacy) {
+  const contentEl = document.getElementById('medAvailContent');
+
+  if (!list || list.length === 0) {
+    contentEl.innerHTML = `
+      <div class="text-center py-4">
+        <i class="bi bi-capsule text-muted fs-1 d-block mb-2"></i>
+        <h6 class="fw-bold">No Medicine Stock Records On File</h6>
+        <p class="small text-muted mb-3">This pharmacy has not published active inventory records to the network yet.</p>
+        ${pharmacy && pharmacy.contactPhone ? `
+          <a href="tel:${pharmacy.contactPhone}" class="btn btn-warning btn-sm fw-bold">
+            <i class="bi bi-telephone-fill me-1"></i> Call to Confirm Stock (${pharmacy.contactPhone})
+          </a>
+        ` : ''}
+      </div>
+    `;
+    return;
+  }
+
+  contentEl.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-hover align-middle small mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Medicine &amp; Generic Formula</th>
+            <th>Dosage / Mfr</th>
+            <th>Available Qty</th>
+            <th>Unit Price</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(m => {
+            let statusBadge = '';
+            if (m.isExpired) {
+              statusBadge = '<span class="badge bg-danger">Expired</span>';
+            } else if (m.availableQuantity <= 0) {
+              statusBadge = '<span class="badge bg-secondary">Out of Stock</span>';
+            } else if (m.status === 'LOW_STOCK') {
+              statusBadge = '<span class="badge bg-warning text-dark">Low Stock</span>';
+            } else {
+              statusBadge = '<span class="badge bg-success">In Stock</span>';
+            }
+
+            const isLive = m.dataSource === 'LIVE';
+
+            return `
+              <tr class="${m.isExpired || m.availableQuantity <= 0 ? 'table-light text-muted' : ''}">
+                <td>
+                  <div class="fw-bold text-navy">${m.medicineName}</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">${m.genericName} &bull; ${m.categoryName}</div>
+                  ${m.requiresPrescription ? '<span class="badge badge-rx">Rx Required</span>' : ''}
+                </td>
+                <td>
+                  <div>${m.strength} (${m.dosageForm})</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">${m.manufacturer}</div>
+                </td>
+                <td>
+                  <span class="fs-6 fw-bold ${m.availableQuantity > 0 ? 'text-success' : 'text-danger'}">${m.availableQuantity}</span>
+                  <div class="text-muted" style="font-size: 0.7rem;">(Total: ${m.totalQuantity}, Res: ${m.reservedQuantity})</div>
+                </td>
+                <td><strong>₹${m.unitPrice != null ? Number(m.unitPrice).toFixed(2) : '0.00'}</strong></td>
+                <td>
+                  <div>${m.expiryDate}</div>
+                  ${m.isNearExpiry ? '<span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Near Expiry</span>' : ''}
+                </td>
+                <td>
+                  ${statusBadge}
+                  <div class="mt-1">
+                    <span class="badge ${isLive ? 'badge-live' : 'badge-sample'}">${m.dataSource}</span>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function filterModalMedicines() {
+  const q = document.getElementById('med-modal-search').value.toLowerCase().trim();
+  if (!q) {
+    renderModalMedicines(currentModalMedicines);
+    return;
+  }
+  const filtered = currentModalMedicines.filter(m =>
+    m.medicineName.toLowerCase().includes(q) ||
+    m.genericName.toLowerCase().includes(q) ||
+    m.categoryName.toLowerCase().includes(q)
+  );
+  renderModalMedicines(filtered);
+}
+
+// ============================================================================
+// 8. PHARMACY FULL PROFILE MODAL
+// ============================================================================
+async function openPharmacyDetailsModal(event, pharmacyId) {
+  if (event) event.stopPropagation();
+
+  const bodyEl = document.getElementById('pharmacyDetailsBody');
+  bodyEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-teal"></div></div>';
+
+  const modal = new bootstrap.Modal(document.getElementById('pharmacyDetailsModal'));
+  modal.show();
+
+  try {
+    const p = await apiRequest(`/pharmacies/${pharmacyId}/details`);
+    bodyEl.innerHTML = `
+      <div class="vstack gap-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge bg-primary-subtle text-primary fw-bold">${p.locality}</span>
+          <span class="badge bg-success-subtle text-success fw-bold">${p.verificationStatus || 'VERIFIED'}</span>
+        </div>
+        <h4 class="fw-bold text-navy mb-0">${p.name}</h4>
+        <p class="text-muted small">${p.address}, ${p.city} - ${p.postalCode || ''}</p>
+
+        <div class="p-3 bg-light rounded-3 small vstack gap-2">
+          <div><strong>Drug License:</strong> ${p.licenseNumber || 'Verified by Network'}</div>
+          <div><strong>Contact Phone:</strong> ${p.contactPhone ? `<a href="tel:${p.contactPhone}">${p.contactPhone}</a>` : 'Not provided'}</div>
+          <div><strong>Email:</strong> ${p.email ? `<a href="mailto:${p.email}">${p.email}</a>` : 'Not provided'}</div>
+          <div><strong>Website:</strong> ${p.website ? `<a href="${p.website}" target="_blank">${p.website}</a>` : 'Not provided'}</div>
+          <div><strong>Operating Hours:</strong> ${p.openingHours || 'Standard Hours'} ${p.opens24x7 ? '(24x7 Emergency Ready)' : ''}</div>
+          <div><strong>Delivery Service:</strong> ${p.deliveryAvailable ? `Enabled (Radius: ${p.deliveryRadiusKm || 5} km, Fee: ₹${p.deliveryFee || 30})` : 'Self-pickup only'}</div>
+          <div><strong>Coordinates:</strong> ${p.latitude}, ${p.longitude}</div>
+          <div><strong>Directory Source:</strong> ${p.dataSource}</div>
+          <div><strong>Last Verified:</strong> ${p.lastVerifiedAt || 'Recently Checked'}</div>
+        </div>
+
+        <div class="d-flex gap-2 mt-2">
+          ${p.contactPhone ? `<a href="tel:${p.contactPhone}" class="btn btn-primary-teal btn-sm flex-grow-1"><i class="bi bi-telephone-fill me-1"></i> Call Pharmacy</a>` : ''}
+          <a href="${p.googleMapsUrl}" target="_blank" class="btn btn-outline-success btn-sm flex-grow-1"><i class="bi bi-map-fill me-1"></i> Open in Maps</a>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    bodyEl.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  }
+}
+
+// ============================================================================
+// 9. PHARMACY REGISTRATION WORKFLOW
+// ============================================================================
+function fillCurrentCoordsForReg() {
+  document.getElementById('reg-lat').value = currentCoords.lat.toFixed(6);
+  document.getElementById('reg-lng').value = currentCoords.lng.toFixed(6);
+  showToast('Copied current location coordinates to registration form', 'info');
+}
+
+async function handlePharmacyRegistration(event) {
+  event.preventDefault();
+  const form = event.target;
+  const submitBtn = document.getElementById('btn-submit-reg');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Submitting...';
+
+  const payload = {
+    name: form.name.value.trim(),
+    address: form.address.value.trim(),
+    locality: form.locality.value.trim(),
+    city: form.city.value.trim(),
+    postalCode: form.postalCode.value.trim(),
+    contactPhone: form.contactPhone.value.trim(),
+    latitude: parseFloat(form.latitude.value),
+    longitude: parseFloat(form.longitude.value),
+    licenseNumber: form.licenseNumber.value.trim() || null,
+    openingHours: form.openingHours.value.trim() || null,
+    website: form.website.value.trim() || null,
+    email: form.email.value.trim() || null,
+    deliveryAvailable: form.deliveryAvailable.checked,
+    opens24x7: form.opens24x7.checked,
+    deliveryRadiusKm: form.deliveryRadiusKm.value ? parseFloat(form.deliveryRadiusKm.value) : null
+  };
+
+  try {
+    const res = await apiRequest('/pharmacies/register', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Submit for Verification';
+    form.reset();
+
+    bootstrap.Modal.getInstance(document.getElementById('registerPharmacyModal')).hide();
+    showToast('Pharmacy registration submitted! It is now pending administrative approval.', 'success');
+    loadPendingApprovalCount();
+  } catch (err) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Submit for Verification';
+    showToast(err.message, 'danger');
+  }
+}
+
+// ============================================================================
+// 10. ADMIN APPROVALS WORKFLOW
+// ============================================================================
+async function loadPendingApprovalCount() {
+  try {
+    const list = await apiRequest('/pharmacies/pending-approval');
+    const badge = document.getElementById('pending-count-badge');
+    badge.innerText = (list ? list.length : 0);
+  } catch (err) {
+    console.debug('Could not load pending count:', err);
+  }
+}
+
+document.getElementById('adminApprovalsModal').addEventListener('show.bs.modal', async () => {
+  const body = document.getElementById('adminApprovalsBody');
+  body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-teal"></div></div>';
+
+  try {
+    const list = await apiRequest('/pharmacies/pending-approval');
+    if (!list || list.length === 0) {
+      body.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-check-circle fs-2 text-success d-block mb-2"></i>No pending pharmacy registrations requiring verification.</div>';
+      return;
+    }
+
+    body.innerHTML = list.map(p => `
+      <div class="card p-3 mb-3 border shadow-sm" id="pending-card-${p.id}">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="fw-bold text-navy mb-1">${p.name}</h5>
+            <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>${p.address}, ${p.locality} - ${p.postalCode || ''}</div>
+            <div class="small mt-1"><strong>Phone:</strong> ${p.contactPhone} &bull; <strong>License:</strong> ${p.licenseNumber || 'Not provided'}</div>
+            <div class="small text-muted"><strong>Coords:</strong> ${p.latitude}, ${p.longitude}</div>
+          </div>
+          <span class="badge bg-warning text-dark">PENDING</span>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-3 pt-2 border-top">
+          <button class="btn btn-sm btn-success fw-bold" onclick="approvePharmacy(${p.id})">
+            <i class="bi bi-check-circle-fill me-1"></i> Approve &amp; Verify
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="rejectPharmacy(${p.id})">
+            <i class="bi bi-x-circle me-1"></i> Reject
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    body.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+  }
+});
+
+async function approvePharmacy(id) {
+  try {
+    await apiRequest(`/pharmacies/${id}/approve`, { method: 'POST' });
+    showToast('Pharmacy verified and approved! Added to network directory.', 'success');
+    const el = document.getElementById(`pending-card-${id}`);
+    if (el) el.remove();
+    loadPendingApprovalCount();
+    triggerDiscoverySearch();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+async function rejectPharmacy(id) {
+  try {
+    await apiRequest(`/pharmacies/${id}/reject`, { method: 'POST' });
+    showToast('Pharmacy registration rejected.', 'warning');
+    const el = document.getElementById(`pending-card-${id}`);
+    if (el) el.remove();
+    loadPendingApprovalCount();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+</script>
+<script src="/assets/js/chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Emergency Medicine Availability Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div id="main-navbar"></div>
+
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-5">
+        
+        <div class="card-premium p-4 p-md-5 shadow-lg border-0 mb-4">
+          <div class="text-center mb-4">
+            <div class="d-inline-flex p-3 rounded-circle text-danger mb-2" style="background:#FEE2E2;">
+              <i class="bi bi-shield-lock-fill fs-2"></i>
+            </div>
+            <h2 class="fw-bold">Sign In</h2>
+            <p class="text-muted small">Access your Emergency Medicine Network portal</p>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div id="login-error-alert" class="alert alert-danger d-none d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+            <div id="login-error-message">Invalid email or password</div>
+          </div>
+
+          <!-- Session Expired Notice -->
+          <div id="session-expired-alert" class="alert alert-warning d-none d-flex align-items-center" role="alert">
+            <i class="bi bi-clock-history fs-5 me-2"></i>
+            <div>Your session has expired. Please sign in again.</div>
+          </div>
+
+          <!-- Login Form -->
+          <form id="login-form">
+            <div class="mb-3">
+              <label for="email" class="form-label fw-semibold">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control" id="email" required placeholder="name@emergencymed.org">
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="password" class="form-label fw-semibold">Password</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-key"></i></span>
+                <input type="password" class="form-control" id="password" required placeholder="••••••••">
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                  <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" id="login-submit-btn" class="btn btn-primary w-100 py-2 fs-6 fw-bold">
+              <span id="btn-text">Sign In</span>
+              <span id="btn-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+            </button>
+          </form>
+
+          <div class="text-center mt-4">
+            <span class="text-muted small">Don't have an account yet? </span>
+            <a href="/register.html" class="fw-bold text-decoration-none" style="color:var(--color-secondary);">Register here</a>
+          </div>
+        </div>
+
+        <!-- Quick 1-Click Role Logins for Demonstrations -->
+        <div class="card-premium p-4 border-0">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold text-uppercase text-muted mb-0 small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick 1-Click Role Login</h6>
+            <span class="badge bg-secondary-subtle text-secondary small">Demo Helper</span>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <button class="btn btn-outline-dark btn-sm w-100 text-start py-2 quick-fill-btn" 
+                      data-email="admin@demo.in" data-pass="Admin@123">
+                <i class="bi bi-shield-shaded text-primary me-1"></i> Admin
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-dark btn-sm w-100 text-start py-2 quick-fill-btn" 
+                      data-email="patient@demo.in" data-pass="Patient@123">
+                <i class="bi bi-person text-info me-1"></i> Patient
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-dark btn-sm w-100 text-start py-2 quick-fill-btn" 
+                      data-email="hospital@demo.in" data-pass="Hospital@123">
+                <i class="bi bi-hospital text-danger me-1"></i> Hospital
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-dark btn-sm w-100 text-start py-2 quick-fill-btn" 
+                      data-email="delivery@demo.in" data-pass="Delivery@123">
+                <i class="bi bi-bicycle text-warning me-1"></i> Delivery Partner
+              </button>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-outline-dark btn-sm w-100 text-start py-2 quick-fill-btn" 
+                      data-email="pharmacy@demo.in" data-pass="Pharmacy@123">
+                <i class="bi bi-shop text-success me-1"></i> Pharmacy (Approved MedPlus)
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.UI && typeof UI.renderNavbar === 'function') {
+        UI.renderNavbar(null);
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('expired')) {
+        document.getElementById('session-expired-alert').classList.remove('d-none');
+      }
+
+      // Password toggle
+      const togglePasswordBtn = document.getElementById('togglePassword');
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('togglePasswordIcon');
+      togglePasswordBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        toggleIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+      });
+
+      // Quick fill buttons
+      document.querySelectorAll('.quick-fill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('email').value = btn.getAttribute('data-email');
+          document.getElementById('password').value = btn.getAttribute('data-pass');
+          document.getElementById('login-form').requestSubmit();
+        });
+      });
+
+      // Form submission
+      const loginForm = document.getElementById('login-form');
+      const submitBtn = document.getElementById('login-submit-btn');
+      const btnText = document.getElementById('btn-text');
+      const btnSpinner = document.getElementById('btn-spinner');
+      const errorAlert = document.getElementById('login-error-alert');
+      const errorMessage = document.getElementById('login-error-message');
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorAlert.classList.add('d-none');
+        btnText.textContent = 'Authenticating...';
+        btnSpinner.classList.remove('d-none');
+        submitBtn.disabled = true;
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+          const resp = await (window.Api || window.api).post('/api/v1/auth/login', { email, password });
+          try {
+            if (window.UI && typeof UI.showToast === 'function') {
+              UI.showToast(`Welcome back, ${resp.fullName || email}!`, 'success');
+            }
+          } catch (ignored) {}
+
+          const redirect = sessionStorage.getItem('redirect_after_login') || (resp && resp.redirectUrl) || '/index.html';
+          sessionStorage.removeItem('redirect_after_login');
+          window.location.href = redirect;
+        } catch (err) {
+          console.error('Login error:', err);
+          errorMessage.textContent = err.message || 'Invalid email or password';
+          errorAlert.classList.remove('d-none');
+          btnText.textContent = 'Sign In';
+          btnSpinner.classList.add('d-none');
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

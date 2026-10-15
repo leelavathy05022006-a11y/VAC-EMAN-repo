@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Medicine & Category Catalogue - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom px-4">
+  <a class="navbar-brand fw-bold fs-4" href="/"><i class="bi bi-shield-lock me-2"></i>EmergencyMed Admin</a>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <a href="/chennai-pharmacies.html" class="nav-link"><i class="bi bi-geo-alt me-1"></i> Chennai Discovery</a>
+    <a href="/pharmacy/inventory.html" class="nav-link"><i class="bi bi-box-seam me-1"></i> Inventory</a>
+    <a href="/pharmacy/settings.html" class="nav-link"><i class="bi bi-gear me-1"></i> Settings</a>
+    <a href="/admin/medicines.html" class="nav-link active"><i class="bi bi-shield-lock me-1"></i> Admin Catalogue</a>
+    <a href="/medicine-catalogue.html" class="nav-link"><i class="bi bi-search me-1"></i> Public Search</a>
+  </div>
+</nav>
+
+<div class="container py-4" style="max-width: 1200px;">
+  
+  <ul class="nav nav-tabs mb-4" id="catalogue-tabs">
+    <li class="nav-item">
+      <a class="nav-link active fw-bold" href="#medicines-tab" data-bs-toggle="tab"><i class="bi bi-capsule me-2"></i>Medicines Catalogue</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link fw-bold" href="#categories-tab" data-bs-toggle="tab"><i class="bi bi-tags me-2"></i>Categories</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    
+    <!-- Medicines Tab -->
+    <div class="tab-pane fade show active" id="medicines-tab">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="input-group style-search" style="max-width: 350px;">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="text" id="med-search" class="form-control" placeholder="Search medicines...">
+        </div>
+        <button class="btn btn-primary-teal" onclick="openAddMedicineModal()"><i class="bi bi-plus-lg me-1"></i> Add New Medicine</button>
+      </div>
+
+      <div class="table-responsive table-custom">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Generic Name</th>
+              <th>Category</th>
+              <th>Strength & Form</th>
+              <th>Manufacturer</th>
+              <th>Prescription</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="medicines-tbody">
+            <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Categories Tab -->
+    <div class="tab-pane fade" id="categories-tab">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold">Medicine Categories</h5>
+        <button class="btn btn-primary-teal" onclick="openAddCategoryModal()"><i class="bi bi-plus-lg me-1"></i> Add Category</button>
+      </div>
+
+      <div class="table-responsive table-custom">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Category Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="categories-tbody">
+            <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Medicine Modal -->
+<div class="modal fade" id="medicineModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="medModalTitle">Add New Medicine</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="medicineForm">
+          <input type="hidden" id="med-id" name="id">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Medicine Brand Name *</label>
+              <input type="text" id="med-name" name="name" class="form-control" required placeholder="e.g. Paracetamol 650mg">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Generic Name *</label>
+              <input type="text" id="med-generic" name="genericName" class="form-control" required placeholder="e.g. Paracetamol">
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Category *</label>
+              <select id="med-category" name="categoryId" class="form-select" required></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Strength *</label>
+              <input type="text" id="med-strength" name="strength" class="form-control" required placeholder="e.g. 650 mg">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Dosage Form *</label>
+              <select id="med-dosage" name="dosageForm" class="form-select" required>
+                <option value="Tablet">Tablet</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Injection">Injection</option>
+                <option value="Ointment">Ointment</option>
+              </select>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Manufacturer *</label>
+              <input type="text" id="med-manufacturer" name="manufacturer" class="form-control" required placeholder="e.g. Cipla">
+            </div>
+            <div class="col-md-6 d-flex align-items-center mt-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="med-rx" name="requiresPrescription">
+                <label class="form-check-label fw-semibold" for="med-rx">Requires Prescription (Rx)</label>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary-teal w-100">Save Medicine</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="catModalTitle">Add Category</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="categoryForm">
+          <input type="hidden" id="cat-id" name="id">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Category Name *</label>
+            <input type="text" id="cat-name" name="name" class="form-control" required placeholder="e.g. Antibiotics">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <textarea id="cat-desc" name="description" class="form-control" placeholder="Category details..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary-teal w-100">Save Category</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/ui.js"></script>
+<script src="/assets/js/medicines.js"></script>
+</body>
+</html>

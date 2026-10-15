@@ -1,0 +1,334 @@
+/* Request Wizard Stepper */
+.stepper-wrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.step-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #E2E8F0;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.step-item.active .step-circle {
+  background-color: var(--secondary-teal);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+}
+
+.step-item.completed .step-circle {
+  background-color: var(--primary-navy);
+  color: white;
+}
+
+.step-title {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #64748B;
+  text-align: center;
+}
+
+.step-item.active .step-title {
+  color: var(--secondary-teal);
+}
+
+.step-item.completed .step-title {
+  color: var(--primary-navy);
+}
+
+.stepper-line {
+  position: absolute;
+  top: 20px;
+  left: 12%;
+  right: 12%;
+  height: 3px;
+  background-color: #E2E8F0;
+  z-index: 1;
+}
+
+/* Quantity Stepper */
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.qty-stepper button {
+  background: #F8FAFC;
+  border: none;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--primary-navy);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.qty-stepper button:hover {
+  background: #E2E8F0;
+}
+
+.qty-stepper input {
+  width: 50px;
+  text-align: center;
+  border: none;
+  font-weight: 600;
+  outline: none;
+}
+
+/* Medical Disclaimer Banner */
+.medical-disclaimer {
+  background-color: #FFFBEB;
+  border-left: 4px solid #F59E0B;
+  padding: 1rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  color: #92400E;
+}
+
+/* Vertical Status Timeline */
+.timeline-vertical {
+  position: relative;
+  padding-left: 2rem;
+  list-style: none;
+  margin: 0;
+}
+
+.timeline-vertical::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 11px;
+  width: 2px;
+  background: #CBD5E1;
+}
+
+.timeline-node {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.timeline-node:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -2rem;
+  top: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #94A3B8;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.65rem;
+}
+
+.timeline-node.active .timeline-dot {
+  background: var(--secondary-teal);
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+}
+
+.timeline-node.emergency .timeline-dot {
+  background: var(--emergency-red);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.2);
+}
+
+.timeline-content {
+  background: #F8FAFC;
+  border: 1px solid var(--border-color);
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+}
+
+.timeline-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-meta {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+}
+
+/* Pulsing beacon */
+.pulse-beacon {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--emergency-red);
+  margin-right: 6px;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  animation: pulse 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulse {
+  to {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+}
+
+/* Countdown Timer Badge */
+.countdown-badge {
+  font-family: monospace;
+  font-weight: 700;
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #FCD34D;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* File Upload Dropzone */
+.file-dropzone {
+  border: 2px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  background: #F8FAFC;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-dropzone:hover, .file-dropzone.dragover {
+  border-color: var(--secondary-teal);
+  background: #F0FDFA;
+}
+
+/* Live Delivery Map & Marker Styling */
+.live-tracking-card {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: white;
+}
+
+#live-delivery-map {
+  height: 380px;
+  width: 100%;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  z-index: 1;
+}
+
+.pulse-beacon-green {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10B981;
+  margin-right: 6px;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulseGreen 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulseGreen {
+  to {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+/* Custom Leaflet Map Markers */
+.custom-map-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.1rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  border: 2px solid white;
+  transition: transform 0.4s ease;
+}
+
+.marker-pharmacy {
+  background: #0284C7;
+}
+
+.marker-partner {
+  background: #EA580C;
+  animation: riderPulse 2s infinite ease-in-out;
+}
+
+.marker-destination {
+  background: #16A34A;
+}
+
+@keyframes riderPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(234, 88, 12, 0);
+  }
+}
+
+.eta-pill {
+  background: linear-gradient(135deg, #102A43 0%, #1E3A8A 100%);
+  color: white;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dist-pill {
+  background: #F1F5F9;
+  color: #334155;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid #CBD5E1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+

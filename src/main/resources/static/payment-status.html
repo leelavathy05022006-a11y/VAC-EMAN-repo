@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Status | Emergency Medicine Availability Network</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+    .status-card { max-width: 650px; margin: 40px auto; border-radius: 14px; border: 1px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+    .btn-eman-primary { background-color: #0D9488; border-color: #0D9488; color: #FFFFFF; font-weight: 600; }
+    .btn-eman-primary:hover { background-color: #0F766E; border-color: #0F766E; color: #FFFFFF; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-2 shadow-sm" style="background-color: #102A43 !important;">
+    <div class="container">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EMAN <span class="badge bg-danger fs-6">EMERGENCY</span></span>
+      </a>
+      <div class="d-flex align-items-center gap-3">
+        <a href="/request/my-requests.html" class="btn btn-outline-light btn-sm"><i class="bi bi-card-list me-1"></i> My Requests</a>
+        <a href="/profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-circle me-1"></i> Profile</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <div class="status-card p-4 p-md-5 text-center">
+      <!-- Status Badge & Icon -->
+      <div class="mb-3">
+        <span id="paymentStatusBadge" class="badge bg-secondary fs-6 px-3 py-2">CHECKING STATUS...</span>
+      </div>
+
+      <h2 id="statusTitle" class="fw-bold mb-2">Processing Payment</h2>
+      <p id="statusDescription" class="text-muted mb-4">Please wait while we communicate with the payment server...</p>
+
+      <!-- Receipt Box -->
+      <div class="bg-light p-4 rounded-3 text-start mb-4 border">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Payment Reference:</span>
+          <strong id="statusPaymentRef" class="font-monospace text-dark">...</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Paid Amount:</span>
+          <strong id="statusAmount" class="fs-5 text-teal" style="color: #0D9488;">₹0.00</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Payment Method:</span>
+          <strong id="statusMethod" class="text-dark">...</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Gateway Provider:</span>
+          <span id="statusGateway" class="badge bg-info-subtle text-info border">DEMO</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Timestamp:</span>
+          <span id="statusDate" class="text-dark small">...</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+        <a id="linkTrackOrder" href="/request/my-requests.html" class="btn btn-eman-primary px-4 py-2">
+          <i class="bi bi-geo-alt-fill me-1"></i> Track Order Live
+        </a>
+        <button id="btnRetryPayment" class="btn btn-danger px-4 py-2 d-none" onclick="paymentManager.handleRetry()">
+          <i class="bi bi-arrow-repeat me-1"></i> Retry Payment
+        </button>
+        <button type="button" class="btn btn-outline-secondary px-3 py-2" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i> Print Receipt
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Shared Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/payment.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      paymentManager.initStatusPage();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy Requisition Queue - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/request.css">
+</head>
+<body data-required-role="PHARMACY,ADMIN">
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg app-navbar navbar-dark sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EmergencyMed</span>
+        <span class="brand-badge">Pharmacy Desk</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="appNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/index.html"><i class="bi bi-house-door"></i> Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/new.html"><i class="bi bi-plus-circle text-danger"></i> New Request</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/my-requests.html"><i class="bi bi-clock-history"></i> My Requests</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/pharmacy/requests.html"><i class="bi bi-shop"></i> Pharmacy Queue</a></li>
+          <li class="nav-item"><a class="nav-link" href="/delivery/jobs.html"><i class="bi bi-bicycle"></i> Delivery</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/requests.html"><i class="bi bi-shield-lock"></i> Admin</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/notifications.html" class="nav-link position-relative text-white p-2" title="Notifications">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="navbar-notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.7rem;">0</span>
+          </a>
+          <div class="text-light small text-end d-none d-sm-block">
+            <div id="navbar-user-display" class="fw-semibold">Apollo Pharmacy</div>
+            <div class="text-warning" style="font-size: 0.75rem;">Licensed Dispenser</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="py-4">
+    <div class="container-fluid px-lg-4" style="max-width: 1200px;">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-warning text-dark text-uppercase fw-bold"><i class="bi bi-shield-check me-1"></i> Dispensing Station</span>
+            <h2 class="fw-bold mb-0 text-navy">Pharmacy Requisition Queue</h2>
+          </div>
+          <p class="text-muted small mb-0">Triage incoming emergency orders, verify medical prescriptions, dispatch couriers, and process pick-ups.</p>
+        </div>
+        <div>
+          <button class="btn btn-navy btn-sm" onclick="pharmacyApp.loadRequests()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Queue
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs: New, In Progress, Completed -->
+      <ul class="nav nav-pills mb-4 border-bottom pb-3" id="pharmacyTabs">
+        <li class="nav-item">
+          <button class="nav-link active" data-tab="new" onclick="pharmacyApp.switchTab('new')">
+            <i class="bi bi-inbox-fill text-danger me-1"></i> New Requisitions
+            <span class="badge bg-danger ms-1" id="tab-count-new">0</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-tab="in-progress" onclick="pharmacyApp.switchTab('in-progress')">
+            <i class="bi bi-arrow-repeat text-teal me-1"></i> In Progress
+            <span class="badge bg-teal ms-1" id="tab-count-inprogress">0</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-tab="completed" onclick="pharmacyApp.switchTab('completed')">
+            <i class="bi bi-check2-circle text-success me-1"></i> Completed & Archives
+          </button>
+        </li>
+      </ul>
+
+      <!-- Queue Cards Container -->
+      <div id="pharmacy-cards-container" class="row g-4">
+        <div class="col-12 text-center py-5 text-muted">
+          <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+          Loading requisitions...
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Reject Reason Modal -->
+  <div class="modal fade" id="rejectReasonModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-x-circle-fill me-1"></i> Reject Emergency Request</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Rejecting will immediately release all reserved inventory stock back to live availability and alert the requester.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Mandatory Rejection Reason (minimum 10 characters):</label>
+            <textarea id="reject-reason-input" class="form-control" rows="3" placeholder="e.g. Stock damaged, incorrect dosage specified, doctor verification failed..."></textarea>
+            <div class="form-text small text-danger" id="reject-validation-msg" style="display:none;">Reason must contain at least 10 characters.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" onclick="pharmacyApp.confirmReject()">Confirm Rejection & Release Stock</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prescription Viewer Modal -->
+  <div class="modal fade" id="rxViewerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-navy text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-medical me-1"></i> Prescription Verification Inspection</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center p-3">
+          <div id="rx-viewer-content" class="mb-3" style="min-height: 350px;">
+            <div class="spinner-border text-teal mt-5" role="status"></div>
+          </div>
+          <div class="p-3 bg-light rounded text-start">
+            <div class="fw-semibold text-dark mb-1">Doctor / Clinic Attribution: <span id="rx-modal-doctor" class="fw-normal text-muted">-</span></div>
+            <div class="small text-muted mb-3">Please review the medicine names, dosage, patient identity, and doctor's seal before accepting.</div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold small">Pharmacist Remarks (Optional):</label>
+              <input type="text" id="rx-verify-remarks" class="form-control form-control-sm" placeholder="e.g., Verified valid registration number and patient match">
+            </div>
+            <div class="d-flex gap-2 justify-content-end pt-2 border-top">
+              <button class="btn btn-outline-danger btn-sm" onclick="pharmacyApp.verifyPrescriptionAction('REJECTED')">
+                <i class="bi bi-x-octagon"></i> Mark Rx Invalid / Rejected
+              </button>
+              <button class="btn btn-success btn-sm fw-bold" onclick="pharmacyApp.verifyPrescriptionAction('VERIFIED')">
+                <i class="bi bi-check-circle-fill"></i> Approve & Verify Prescription
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-auto">
+    <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+      <div>&copy; 2026 EmergencyMed Dispensing Platform &bull; Module 4</div>
+      <div class="small text-muted">Strict Inventory Isolation & Audit Compliance</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/notifications.js"></script>
+  <script>
+    const pharmacyApp = {
+      currentTab: 'new',
+      pendingRequestId: null,
+      activePrescriptionId: null,
+      expiryTimers: {},
+
+      init() {
+        this.loadRequests();
+        setInterval(() => {
+          if (this.currentTab === 'new') this.loadRequests(true);
+        }, 15000);
+      },
+
+      switchTab(tab) {
+        this.currentTab = tab;
+        document.querySelectorAll('#pharmacyTabs .nav-link').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+        });
+        this.loadRequests();
+      },
+
+      async loadRequests(silent = false) {
+        const container = document.getElementById('pharmacy-cards-container');
+        if (!silent) ui.showLoading('Loading requests...');
+
+        try {
+          const res = await api.get('/api/v1/requests/pharmacy', { tab: this.currentTab, page: 0, size: 30 });
+          if (!silent) ui.hideLoading();
+
+          // Clear existing countdown intervals
+          Object.values(this.expiryTimers).forEach(clearInterval);
+          this.expiryTimers = {};
+
+          if (!res || !res.content || res.content.length === 0) {
+            container.innerHTML = `
+              <div class="col-12">
+                <div class="empty-state bg-white border rounded p-5 text-center">
+                  <i class="bi bi-inbox text-muted display-4 mb-3"></i>
+                  <h5 class="fw-bold text-secondary">No requests in "${this.currentTab}" queue</h5>
+                  <p class="text-muted small">New emergency medicine requisitions will appear here immediately.</p>
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = res.content.map(r => this.renderRequestCard(r)).join('');
+          res.content.forEach(r => this.initExpiryCountdown(r));
+
+          // Tab badge counts
+          if (this.currentTab === 'new') {
+            document.getElementById('tab-count-new').textContent = res.totalElements || res.content.length;
+          }
+        } catch (e) {
+          if (!silent) ui.hideLoading();
+          ui.toast('Failed to load queue: ' + e.message, 'danger');
+        }
+      },
+
+      renderRequestCard(r) {
+        const isCritical = r.priority === 'CRITICAL';
+        const cardBorder = isCritical ? 'border-danger border-2' : 'border-primary';
+        const hasRx = r.items.some(i => i.requiresPrescription);
+
+        return `
+          <div class="col-lg-6" id="req-card-${r.id}">
+            <div class="card app-card shadow-sm h-100 ${cardBorder}">
+              <!-- Card Header -->
+              <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                  <span class="fw-bold text-navy fs-6 me-2">${r.referenceCode}</span>
+                  ${ui.formatPriorityBadge(r.priority)}
+                  <span class="badge bg-secondary ms-1">${r.fulfilmentType}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="countdown-badge" id="expiry-badge-${r.id}" style="display:none;">
+                    <i class="bi bi-clock-history"></i> <span id="expiry-timer-${r.id}">--:--</span>
+                  </div>
+                  ${ui.formatStatusBadge(r.status)}
+                </div>
+              </div>
+
+              <!-- Card Body -->
+              <div class="card-body p-3">
+                <!-- Patient / Hospital Info -->
+                <div class="row g-2 mb-3 bg-light p-2 rounded small">
+                  <div class="col-6">
+                    <span class="text-muted">Patient:</span> <strong class="text-dark">${r.patientName}</strong>
+                    <div class="text-muted"><i class="bi bi-telephone"></i> ${r.patientPhone}</div>
+                  </div>
+                  <div class="col-6">
+                    <span class="text-muted">Type:</span> <strong>${r.requesterType}</strong>
+                    ${r.doctorName ? `<div class="text-secondary"><i class="bi bi-person-badge"></i> Dr. ${r.doctorName}</div>` : ''}
+                  </div>
+                  ${r.deliveryAddress ? `
+                    <div class="col-12 pt-1 border-top">
+                      <span class="text-muted">Delivery Address:</span> <span class="fw-semibold text-dark">${r.deliveryAddress}</span>
+                    </div>
+                  ` : ''}
+                  ${r.notes ? `
+                    <div class="col-12 text-danger small fst-italic">
+                      <i class="bi bi-exclamation-circle"></i> "${r.notes}"
+                    </div>
+                  ` : ''}
+                </div>
+
+                <!-- Items Requested Table -->
+                <h6 class="fw-bold text-navy small mb-2"><i class="bi bi-capsule"></i> Prescribed Medicines & Stock Check:</h6>
+                <div class="border rounded p-2 mb-3 bg-white">
+                  ${r.items.map(it => `
+                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom-dashed">
+                      <div>
+                        <span class="fw-semibold text-dark">${it.medicineName}</span>
+                        ${it.requiresPrescription ? '<span class="badge bg-danger-subtle text-danger ms-1" style="font-size: 0.7rem;">Rx Required</span>' : ''}
+                      </div>
+                      <div class="text-end">
+                        <span class="badge bg-light text-dark border">Qty: <strong>${it.quantity}</strong></span>
+                        <span class="fw-bold text-navy ms-2">${ui.formatMoney(it.lineTotal)}</span>
+                      </div>
+                    </div>
+                  `).join('')}
+                  <div class="d-flex justify-content-between align-items-center pt-2 fw-bold text-dark small">
+                    <span>Total Amount (Hold):</span>
+                    <span class="fs-6 text-teal">${ui.formatMoney(r.grandTotal)}</span>
+                  </div>
+                </div>
+
+                <!-- Prescription Inspection Banner -->
+                ${r.prescriptionId ? `
+                  <div class="p-2 mb-3 rounded border d-flex justify-content-between align-items-center ${r.prescriptionStatus === 'VERIFIED' ? 'bg-success-subtle border-success' : r.prescriptionStatus === 'REJECTED' ? 'bg-danger-subtle border-danger' : 'bg-warning-subtle border-warning'}">
+                    <div class="small">
+                      <i class="bi bi-file-earmark-medical-fill me-1"></i>
+                      <strong>Prescription:</strong>
+                      <span class="badge ${r.prescriptionStatus === 'VERIFIED' ? 'bg-success' : r.prescriptionStatus === 'REJECTED' ? 'bg-danger' : 'bg-warning text-dark'} ms-1">${r.prescriptionStatus}</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-dark" onclick="pharmacyApp.openRxViewer(${r.prescriptionId}, '${r.doctorName || ''}', ${r.id})">
+                      <i class="bi bi-eye"></i> View & Verify
+                    </button>
+                  </div>
+                ` : hasRx ? `
+                  <div class="alert alert-danger py-1 px-2 small mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Rx missing! Item requires prescription verification.
+                  </div>
+                ` : ''}
+
+                <!-- Action Buttons per Status -->
+                <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                  ${r.status === 'PENDING' ? `
+                    <button class="btn btn-emergency flex-grow-1 fw-bold" onclick="pharmacyApp.acceptRequest(${r.id}, ${hasRx}, '${r.prescriptionStatus}')">
+                      <i class="bi bi-check-circle-fill"></i> Accept Request
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="pharmacyApp.promptReject(${r.id})">
+                      <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                  ` : ''}
+
+                  ${r.status === 'READY_FOR_PICKUP' ? `
+                    <button class="btn btn-teal flex-grow-1 fw-bold" onclick="pharmacyApp.handoverOrder(${r.id})">
+                      <i class="bi bi-box-seam-fill"></i> Hand Over to Requester (Pick-Up)
+                    </button>
+                  ` : ''}
+
+                  ${r.status === 'FINDING_DELIVERY' ? `
+                    <button class="btn btn-warning flex-grow-1 fw-semibold text-dark" onclick="pharmacyApp.retryDelivery(${r.id})">
+                      <i class="bi bi-arrow-repeat"></i> Retry Delivery Dispatch
+                    </button>
+                  ` : ''}
+
+                  ${['PENDING', 'ACCEPTED', 'READY_FOR_PICKUP', 'FINDING_DELIVERY'].includes(r.status) ? `
+                    <button class="btn btn-outline-secondary btn-sm" onclick="pharmacyApp.cancelRequest(${r.id})">
+                      <i class="bi bi-slash-circle"></i> Cancel
+                    </button>
+                  ` : ''}
+
+                  <a href="/request/track.html?id=${r.id}" class="btn btn-outline-primary btn-sm ms-auto">
+                    <i class="bi bi-clock-history"></i> Track
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      initExpiryCountdown(r) {
+        if (!r.expiresAt || !['PENDING', 'READY_FOR_PICKUP'].includes(r.status)) return;
+
+        const badge = document.getElementById(`expiry-badge-${r.id}`);
+        const text = document.getElementById(`expiry-timer-${r.id}`);
+        if (!badge || !text) return;
+
+        const expiresAt = new Date(r.expiresAt).getTime();
+        badge.style.display = 'inline-flex';
+
+        const updateTimer = () => {
+          const now = Date.now();
+          const diff = Math.max(0, Math.floor((expiresAt - now) / 1000));
+          if (diff <= 0) {
+            text.textContent = 'Expired';
+            badge.classList.remove('bg-warning');
+            badge.classList.add('bg-danger', 'text-white');
+            clearInterval(this.expiryTimers[r.id]);
+          } else {
+            const mins = Math.floor(diff / 60);
+            const secs = diff % 60;
+            text.textContent = `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+          }
+        };
+
+        updateTimer();
+        this.expiryTimers[r.id] = setInterval(updateTimer, 1000);
+      },
+
+      async acceptRequest(id, hasRx, rxStatus) {
+        if (hasRx && rxStatus !== 'VERIFIED') {
+          ui.toast('Cannot accept: Prescription must be inspected and marked VERIFIED first!', 'danger');
+          return;
+        }
+
+        ui.showLoading('Accepting emergency request...');
+        try {
+          await api.post(`/api/v1/requests/${id}/accept`, {});
+          ui.hideLoading();
+          ui.toast('Request accepted successfully!', 'success');
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Accept failed: ' + e.message, 'danger');
+        }
+      },
+
+      promptReject(id) {
+        this.pendingRequestId = id;
+        document.getElementById('reject-reason-input').value = '';
+        document.getElementById('reject-validation-msg').style.display = 'none';
+        const modal = new bootstrap.Modal(document.getElementById('rejectReasonModal'));
+        modal.show();
+      },
+
+      async confirmReject() {
+        const reason = document.getElementById('reject-reason-input').value.trim();
+        if (reason.length < 10) {
+          document.getElementById('reject-validation-msg').style.display = 'block';
+          return;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('rejectReasonModal')).hide();
+        ui.showLoading('Rejecting request & restoring stock...');
+        try {
+          await api.post(`/api/v1/requests/${this.pendingRequestId}/reject`, { reason });
+          ui.hideLoading();
+          ui.toast('Request rejected. Reserved stock released.', 'info');
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Reject failed: ' + e.message, 'danger');
+        }
+      },
+
+      async retryDelivery(id) {
+        ui.showLoading('Retrying delivery dispatch...');
+        try {
+          await api.post(`/api/v1/requests/${id}/retry-delivery`, {});
+          ui.hideLoading();
+          ui.toast('Delivery assignment retried! Pinging available riders.', 'success');
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Retry failed: ' + e.message, 'danger');
+        }
+      },
+
+      async handoverOrder(id) {
+        if (!confirm('Confirm medicine handover to self-pickup patient? This permanently commits inventory stock.')) return;
+        ui.showLoading('Recording handover...');
+        try {
+          await api.post(`/api/v1/requests/${id}/handover`, {});
+          ui.hideLoading();
+          ui.toast('Order picked up! Inventory committed.', 'success');
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Handover failed: ' + e.message, 'danger');
+        }
+      },
+
+      async cancelRequest(id) {
+        const reason = prompt('Please enter cancellation reason (at least 5 characters):');
+        if (!reason || reason.trim().length < 5) {
+          ui.toast('Cancellation reason must be at least 5 characters', 'warning');
+          return;
+        }
+
+        ui.showLoading('Cancelling request...');
+        try {
+          await api.post(`/api/v1/requests/${id}/cancel`, { reason: reason.trim() });
+          ui.hideLoading();
+          ui.toast('Request cancelled successfully', 'info');
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Cancel failed: ' + e.message, 'danger');
+        }
+      },
+
+      openRxViewer(prescriptionId, doctorName, requestId) {
+        this.activePrescriptionId = prescriptionId;
+        this.pendingRequestId = requestId;
+        document.getElementById('rx-modal-doctor').textContent = doctorName || 'Not specified';
+        document.getElementById('rx-verify-remarks').value = '';
+
+        const content = document.getElementById('rx-viewer-content');
+        const fileUrl = `/api/v1/prescriptions/${prescriptionId}/file`;
+        content.innerHTML = `
+          <div class="mb-3">
+            <iframe src="${fileUrl}" style="width: 100%; height: 420px; border: 1px solid #CBD5E1; border-radius: 8px;"></iframe>
+          </div>
+          <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-box-arrow-up-right"></i> Open in New Tab
+          </a>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById('rxViewerModal'));
+        modal.show();
+      },
+
+      async verifyPrescriptionAction(status) {
+        const remarks = document.getElementById('rx-verify-remarks').value.trim() ||
+          (status === 'VERIFIED' ? 'Prescription verified by duty pharmacist' : 'Prescription rejected by duty pharmacist');
+
+        ui.showLoading(`Marking prescription as ${status}...`);
+        try {
+          await api.patch(`/api/v1/prescriptions/${this.activePrescriptionId}/verify`, { status, remarks });
+          ui.hideLoading();
+          bootstrap.Modal.getInstance(document.getElementById('rxViewerModal')).hide();
+          ui.toast(`Prescription updated to ${status}!`, 'success');
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Verification failed: ' + e.message, 'danger');
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => pharmacyApp.init());
+  </script>
+</body>
+</html>

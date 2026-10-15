@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy Inventory Management - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/theme.css" rel="stylesheet">
+  <link href="/assets/css/inventory.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom px-4">
+  <a class="navbar-brand fw-bold fs-4" href="/"><i class="bi bi-hospital me-2"></i>EmergencyMed Pharmacy</a>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <a href="/chennai-pharmacies.html" class="nav-link"><i class="bi bi-geo-alt me-1"></i> Chennai Discovery</a>
+    <a href="/pharmacy/inventory.html" class="nav-link active"><i class="bi bi-box-seam me-1"></i> Inventory</a>
+    <a href="/pharmacy/settings.html" class="nav-link"><i class="bi bi-gear me-1"></i> Settings</a>
+    <a href="/admin/medicines.html" class="nav-link"><i class="bi bi-shield-lock me-1"></i> Admin Catalogue</a>
+    <a href="/medicine-catalogue.html" class="nav-link"><i class="bi bi-search me-1"></i> Public Search</a>
+  </div>
+</nav>
+
+<div class="inventory-container">
+  
+  <!-- Pharmacy Selection Header (Pharmacy-Wise Inventory) -->
+  <div class="card p-3 mb-4 border-0 shadow-sm bg-white rounded-3">
+    <div class="row align-items-center">
+      <div class="col-lg-6 col-md-7 d-flex align-items-center gap-2">
+        <label for="pharmacy-select" class="form-label fw-bold text-nowrap mb-0 text-secondary">
+          <i class="bi bi-shop me-1 text-teal"></i> Viewing Pharmacy:
+        </label>
+        <select id="pharmacy-select" class="form-select form-select-sm border-teal-subtle">
+          <option value="">My Pharmacy (Default Session: ID 101)</option>
+          <!-- Populated from /api/pharmacies -->
+        </select>
+        <button id="refresh-btn" class="btn btn-sm btn-outline-secondary" title="Refresh Inventory" onclick="refreshCurrentPharmacy()">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+      <div class="col-lg-6 col-md-5 text-md-end text-muted small mt-2 mt-md-0" id="pharmacy-info-badge">
+        <span class="badge bg-light text-dark border me-1"><i class="bi bi-geo-alt me-1 text-danger"></i>Chennai</span>
+        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check2-circle me-1"></i>Pharmacy-Wise Stock</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart Reorder Suggestions Banner -->
+  <div id="reorder-banner" class="alert reorder-panel d-none mb-4 p-3 shadow-sm">
+    <div class="d-flex align-items-start">
+      <i class="bi bi-lightbulb-fill text-primary fs-3 me-3 mt-1"></i>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-stars me-1"></i>Smart Reorder Suggestions (Below Safety Threshold)</h6>
+          <span class="badge bg-primary-subtle text-primary" id="reorder-count-badge">0 Suggestions</span>
+        </div>
+        <p class="small text-muted mb-2">The medicines below have fallen below their configured minimum quantity. Suggested quantities are calculated to restore safety buffer without placing auto-orders.</p>
+        <div id="reorder-list" class="d-flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts Banner -->
+  <div id="alerts-banner" class="alert alert-banner d-none mb-4 p-3 shadow-sm">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+      <div>
+        <h6 class="fw-bold mb-1">Inventory & Expiry Alerts</h6>
+        <div id="alerts-list" class="small text-muted"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-2.4 col-6">
+      <div class="card card-summary p-3 text-center">
+        <span class="text-muted small fw-semibold text-uppercase">Total Medicines</span>
+        <h3 id="card-total" class="fw-bold mt-2 mb-0">--</h3>
+      </div>
+    </div>
+    <div class="col-md-2.4 col-6">
+      <div class="card card-summary p-3 text-center border-start border-success border-4">
+        <span class="text-muted small fw-semibold text-uppercase">In Stock</span>
+        <h3 id="card-instock" class="fw-bold text-success mt-2 mb-0">--</h3>
+      </div>
+    </div>
+    <div class="col-md-2.4 col-6">
+      <div class="card card-summary p-3 text-center border-start border-warning border-4">
+        <span class="text-muted small fw-semibold text-uppercase">Low Stock</span>
+        <h3 id="card-lowstock" class="fw-bold text-warning mt-2 mb-0">--</h3>
+      </div>
+    </div>
+    <div class="col-md-2.4 col-6">
+      <div class="card card-summary p-3 text-center border-start border-danger border-4">
+        <span class="text-muted small fw-semibold text-uppercase">Out of Stock</span>
+        <h3 id="card-outstock" class="fw-bold text-danger mt-2 mb-0">--</h3>
+      </div>
+    </div>
+    <div class="col-md-2.4 col-6">
+      <div class="card card-summary p-3 text-center border-start border-secondary border-4">
+        <span class="text-muted small fw-semibold text-uppercase">Expiring Soon</span>
+        <h3 id="card-expiring" class="fw-bold text-secondary mt-2 mb-0">--</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Controls Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <ul class="nav status-tabs" id="status-filter">
+      <li class="nav-item"><a class="nav-link active" href="#" data-status="">All Stock</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-status="IN_STOCK">In Stock</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-status="LOW_STOCK">Low Stock</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-status="OUT_OF_STOCK">Out of Stock</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-status="EXPIRING_SOON">Expiring Soon</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-status="EXPIRED">Expired</a></li>
+    </ul>
+
+    <div class="d-flex gap-2">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" id="search-input" class="form-control border-start-0" placeholder="Search medicine or generic name...">
+      </div>
+      <a href="/pharmacy/inventory-add.html" class="btn btn-primary-teal text-nowrap">
+        <i class="bi bi-plus-lg me-1"></i> Add Medicine
+      </a>
+    </div>
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="table-responsive table-custom">
+    <table class="table table-hover mb-0" id="inventory-table">
+      <thead>
+        <tr>
+          <th>Medicine</th>
+          <th>Strength & Form</th>
+          <th>Batch</th>
+          <th>Total Qty</th>
+          <th>Reserved</th>
+          <th>Available</th>
+          <th>Unit Price</th>
+          <th>Expiry Date</th>
+          <th>Status</th>
+          <th>Freshness</th>
+          <th>Source</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="inventory-tbody">
+        <!-- Rows loaded via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div id="empty-state" class="text-center p-5 d-none">
+    <i class="bi bi-box-seam text-muted fs-1 mb-3"></i>
+    <h5 class="fw-bold">No inventory items found</h5>
+    <p class="text-muted">Try clearing search filters or add new medicines to your stock.</p>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Edit Inventory Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <input type="hidden" id="edit-id" name="id">
+          <div class="mb-3">
+            <label class="form-label">Batch Number</label>
+            <input type="text" id="edit-batchNo" name="batchNo" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Unit Price (₹)</label>
+            <input type="number" step="0.01" id="edit-unitPrice" name="unitPrice" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Low Stock Threshold</label>
+            <input type="number" id="edit-threshold" name="lowStockThreshold" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Expiry Date</label>
+            <input type="date" id="edit-expiryDate" name="expiryDate" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary-teal w-100">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stock In Modal -->
+<div class="modal fade" id="stockInModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Stock In</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="stockInForm">
+          <input type="hidden" id="stockin-id" name="id">
+          <div class="mb-3">
+            <label class="form-label">Quantity to Add</label>
+            <input type="number" id="stockin-qty" name="quantity" class="form-control" required min="1">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Batch Number (Optional)</label>
+            <input type="text" id="stockin-batchNo" name="batchNo" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Expiry Date (Optional)</label>
+            <input type="date" id="stockin-expiryDate" name="expiryDate" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary-teal w-100">Add Stock</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Adjust Modal -->
+<div class="modal fade" id="adjustModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Adjust Stock Quantity</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="adjustForm">
+          <input type="hidden" id="adjust-id" name="id">
+          <div class="mb-3">
+            <label class="form-label">New Total Quantity</label>
+            <input type="number" id="adjust-newQty" name="newQuantity" class="form-control" required min="0">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Reason for Adjustment (min 5 chars)</label>
+            <textarea id="adjust-reason" name="reason" class="form-control" required minlength="5" placeholder="e.g. Audit reconciliation, damaged stock"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary-teal w-100">Confirm Adjustment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Stock Transaction History</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Change</th>
+              <th>After Qty</th>
+              <th>Reserved</th>
+              <th>Ref Code</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/ui.js"></script>
+<script src="/assets/js/auth-guard.js"></script>
+<script src="/assets/js/inventory.js"></script>
+</body>
+</html>

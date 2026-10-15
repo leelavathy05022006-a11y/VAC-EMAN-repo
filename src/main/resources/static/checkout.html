@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Medicine Checkout | EMAN</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+    .checkout-card { border-radius: 12px; border: 1px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .method-card { border: 2px solid #E2E8F0; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; }
+    .method-card:hover { border-color: #0D9488; background-color: #F0FDFA; }
+    .method-radio:checked + .method-card { border-color: #0D9488; background-color: #F0FDFA; }
+    .btn-eman-primary { background-color: #0D9488; border-color: #0D9488; color: #FFFFFF; font-weight: 600; }
+    .btn-eman-primary:hover { background-color: #0F766E; border-color: #0F766E; color: #FFFFFF; }
+    .demo-badge { background-color: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-2 shadow-sm" style="background-color: #102A43 !important;">
+    <div class="container">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EMAN <span class="badge bg-danger fs-6">EMERGENCY</span></span>
+      </a>
+      <div class="d-flex align-items-center gap-3">
+        <a href="/request/my-requests.html" class="btn btn-outline-light btn-sm"><i class="bi bi-card-list me-1"></i> My Requests</a>
+        <a href="/profile.html" class="btn btn-outline-light btn-sm"><i class="bi bi-person-circle me-1"></i> Profile</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- Demo Sandbox Alert -->
+    <div class="alert alert-warning demo-badge d-flex align-items-center gap-2 mb-4 p-3 rounded-3" role="alert">
+      <i class="bi bi-info-circle-fill fs-5 text-warning-emphasis"></i>
+      <div>
+        <strong>DEMO/TEST PAYMENT SANDBOX:</strong> Gateway-independent simulated checkout. No actual credit card or real bank funds are charged.
+      </div>
+    </div>
+
+    <!-- Already Paid Alert -->
+    <div id="alreadyPaidAlert" class="alert alert-success d-none mb-4 p-3 rounded-3 shadow-sm">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <i class="bi bi-check-circle-fill text-success fs-5 me-2"></i>
+          <strong>This order is already marked as PAID!</strong>
+        </div>
+        <a href="/request/my-requests.html" class="btn btn-sm btn-success">View My Requests</a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Order Summary Column -->
+      <div class="col-lg-7">
+        <div class="checkout-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
+            <div>
+              <h5 class="fw-bold mb-1">Order Summary</h5>
+              <span class="text-muted small">Reference: <strong id="orderRefText" class="text-dark">#...</strong></span>
+            </div>
+            <span id="orderStatusBadge" class="badge bg-primary px-3 py-2">PENDING</span>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-muted small">Fulfilling Pharmacy</div>
+            <div id="pharmacyNameText" class="fw-semibold text-dark fs-6">Loading pharmacy...</div>
+            <div class="text-muted small mt-1">Fulfilment Type: <span id="fulfilmentTypeText" class="badge bg-secondary">DELIVERY</span></div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="table-responsive mb-4">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Medicine Item</th>
+                  <th class="text-center">Qty</th>
+                  <th class="text-end">Unit Price</th>
+                  <th class="text-end">Total</th>
+                </tr>
+              </thead>
+              <tbody id="checkoutItemsBody">
+                <tr><td colspan="4" class="text-center text-muted py-3">Loading items...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Price Breakdown -->
+          <div class="bg-light p-3 rounded-3">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Medicines Subtotal</span>
+              <span id="medicineCostText" class="fw-semibold">₹0.00</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Emergency Delivery Fee</span>
+              <span id="deliveryFeeText" class="fw-semibold">₹0.00</span>
+            </div>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold fs-5 text-dark">Payable Amount</span>
+              <span id="grandTotalText" class="fw-bold fs-4 text-teal" style="color: #0D9488;">₹0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Methods Column -->
+      <div class="col-lg-5">
+        <div class="checkout-card p-4">
+          <h5 class="fw-bold mb-3">Select Payment Method</h5>
+
+          <form id="paymentMethodForm">
+            <!-- UPI Option -->
+            <div class="mb-3">
+              <input type="radio" class="btn-check method-radio" name="paymentMethod" id="method-upi" value="UPI" checked>
+              <label class="p-3 d-flex align-items-center justify-content-between w-100 method-card" for="method-upi">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-phone text-primary fs-3"></i>
+                  <div>
+                    <div class="fw-semibold text-dark">UPI Apps</div>
+                    <div class="text-muted small">Google Pay, PhonePe, Paytm</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+              </label>
+            </div>
+
+            <!-- UPI QR Code -->
+            <div class="mb-3">
+              <input type="radio" class="btn-check method-radio" name="paymentMethod" id="method-upi-qr" value="UPI_QR">
+              <label class="p-3 d-flex align-items-center justify-content-between w-100 method-card" for="method-upi-qr">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-qr-code text-teal fs-3" style="color: #0D9488;"></i>
+                  <div>
+                    <div class="fw-semibold text-dark">Scan UPI QR Code</div>
+                    <div class="text-muted small">Display instant QR code</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+              </label>
+            </div>
+
+            <!-- Debit Card -->
+            <div class="mb-3">
+              <input type="radio" class="btn-check method-radio" name="paymentMethod" id="method-debit" value="DEBIT_CARD">
+              <label class="p-3 d-flex align-items-center justify-content-between w-100 method-card" for="method-debit">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-credit-card text-success fs-3"></i>
+                  <div>
+                    <div class="fw-semibold text-dark">Debit Card</div>
+                    <div class="text-muted small">Visa, Mastercard, RuPay</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+              </label>
+            </div>
+
+            <!-- Credit Card -->
+            <div class="mb-3">
+              <input type="radio" class="btn-check method-radio" name="paymentMethod" id="method-credit" value="CREDIT_CARD">
+              <label class="p-3 d-flex align-items-center justify-content-between w-100 method-card" for="method-credit">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-credit-card-2-front text-info fs-3"></i>
+                  <div>
+                    <div class="fw-semibold text-dark">Credit Card</div>
+                    <div class="text-muted small">Secure hosted checkout</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+              </label>
+            </div>
+
+            <!-- Cash on Delivery -->
+            <div id="method-cod-container" class="mb-4">
+              <input type="radio" class="btn-check method-radio" name="paymentMethod" id="method-cod" value="COD">
+              <label class="p-3 d-flex align-items-center justify-content-between w-100 method-card" for="method-cod">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-cash-stack text-warning fs-3"></i>
+                  <div>
+                    <div class="fw-semibold text-dark">Cash on Delivery (COD)</div>
+                    <div class="text-muted small">Pay cash upon handover</div>
+                  </div>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success">Supported</span>
+              </label>
+            </div>
+
+            <button type="button" id="btnPayNow" class="btn btn-eman-primary w-100 py-3 fs-5 shadow-sm" onclick="paymentManager.handlePaymentSubmit()">
+              <i class="bi bi-shield-lock-fill me-2"></i> Proceed to Pay
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: UPI QR Payment -->
+  <div class="modal fade" id="qrPaymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-3">
+        <div class="modal-header border-0 pb-0 justify-content-center">
+          <h5 class="modal-title fw-bold">Scan & Pay via UPI</h5>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">Reference: <strong id="qrRefCode">...</strong></div>
+          <div id="qrAmount" class="fs-2 fw-bold text-teal mb-3" style="color: #0D9488;">₹0.00</div>
+          
+          <div id="qrImageContainer" class="my-3"></div>
+
+          <div class="alert alert-secondary small text-start mt-3">
+            <i class="bi bi-info-circle me-1"></i> Open any UPI app (GPay, PhonePe, BHIM) and scan the QR code to complete payment.
+          </div>
+
+          <!-- Demo Test Simulation Buttons -->
+          <div class="border-top pt-3 mt-3">
+            <div class="text-muted small mb-2 fw-semibold">DEMO TEST SIMULATOR:</div>
+            <div class="d-flex gap-2 justify-content-center">
+              <button class="btn btn-sm btn-success" onclick="paymentManager.verifyPayment('SUCCESS')">
+                <i class="bi bi-check2-circle"></i> Simulate Payment Success
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="paymentManager.verifyPayment('FAIL')">
+                <i class="bi bi-x-circle"></i> Simulate Failure
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 justify-content-center">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Demo Gateway Simulator (Cards / UPI Intent) -->
+  <div class="modal fade" id="demoGatewayModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-credit-card me-2"></i> Payment Gateway Sandbox</h5>
+        </div>
+        <div class="modal-body">
+          <div class="bg-light p-3 rounded mb-3">
+            <div class="d-flex justify-content-between text-muted small">
+              <span>Reference:</span>
+              <strong id="gatewayRefCode" class="text-dark">...</strong>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mt-1">
+              <span>Method:</span>
+              <strong id="gatewayMethodBadge" class="text-dark">...</strong>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mt-1">
+              <span>Amount:</span>
+              <strong id="gatewayAmount" class="text-dark fs-5">...</strong>
+            </div>
+          </div>
+
+          <p class="small text-muted mb-4">
+            This simulates the authoritative third-party payment gateway redirect/handshake in DEMO mode. Click below to verify the result with the backend.
+          </p>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-success py-2 fw-semibold" onclick="paymentManager.verifyPayment('SUCCESS')">
+              <i class="bi bi-check-circle me-1"></i> Confirm Successful Payment
+            </button>
+            <button class="btn btn-outline-danger py-2" onclick="paymentManager.verifyPayment('FAIL')">
+              <i class="bi bi-exclamation-triangle me-1"></i> Simulate Bank Decline / Failure
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/payment.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      paymentManager.initCheckout();
+    });
+  </script>
+</body>
+</html>

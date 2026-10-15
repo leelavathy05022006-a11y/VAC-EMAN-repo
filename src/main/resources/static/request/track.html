@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Request - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/request.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg app-navbar navbar-dark sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EmergencyMed</span>
+      </a>
+      <div class="collapse navbar-collapse" id="appNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/new.html">New Request</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/my-requests.html">My Requests</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/notifications.html" class="nav-link position-relative text-white p-2">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="navbar-notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">0</span>
+          </a>
+          <span id="navbar-user-display" class="text-light small">Asha Raman</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-4">
+    <div class="container" id="track-main-container" style="max-width: 980px;">
+
+      <!-- Top Status Banner -->
+      <div class="card app-card shadow-sm mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+          <div>
+            <span class="text-muted small">Emergency Requisition Reference:</span>
+            <h3 class="fw-bold mb-0 text-navy" id="track-ref-code">EMR-LOADING...</h3>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span id="track-priority-badge"></span>
+            <span id="track-status-badge"></span>
+          </div>
+        </div>
+        <div class="text-muted small">
+          <i class="bi bi-clock"></i> Requested: <span id="track-created-time">-</span> &bull; Auto-refreshing every 10 seconds
+        </div>
+      </div>
+
+      <!-- Swiggy-Style Real-Time Delivery Tracking Card -->
+      <div id="live-tracking-section" class="card app-card shadow-sm mb-4 border-0 overflow-hidden" style="display: none;">
+        <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="pulse-beacon-green"></span>
+            <h5 class="fw-bold mb-0 text-navy">Live Delivery Partner Tracking</h5>
+            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" id="map-live-badge">GPS ACTIVE</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="dist-pill" id="map-distance-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <span id="map-dist-text">Calculating...</span></span>
+            <span class="eta-pill" id="map-eta-pill"><i class="bi bi-clock-history"></i> <span id="map-eta-text">Calculating ETA...</span></span>
+          </div>
+        </div>
+
+        <!-- Live Status Sub-Bar -->
+        <div class="px-3 py-2 bg-light d-flex justify-content-between align-items-center flex-wrap gap-2 small border-bottom">
+          <div id="map-status-msg" class="fw-semibold text-primary">
+            <i class="bi bi-bicycle me-1"></i> Courier assigned. Locating delivery partner...
+          </div>
+          <div class="text-muted d-flex align-items-center gap-2">
+            <span id="map-last-updated"><i class="bi bi-arrow-repeat"></i> Updated just now</span>
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" onclick="trackApp.recenterMap()">
+              <i class="bi bi-crosshair"></i> Recenter
+            </button>
+          </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="live-delivery-map"></div>
+
+        <!-- Map Legend & Partner Summary Footer -->
+        <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-1 small">
+              <span class="badge rounded-circle bg-primary p-1"><i class="bi bi-hospital"></i></span>
+              <span class="text-muted">Pharmacy:</span>
+              <strong id="legend-pharmacy-name">Apollo Pharmacy</strong>
+            </div>
+            <div class="d-flex align-items-center gap-1 small">
+              <span class="badge rounded-circle bg-warning p-1 text-dark"><i class="bi bi-bicycle"></i></span>
+              <span class="text-muted">Courier:</span>
+              <strong id="legend-partner-name">Assigned Rider</strong>
+            </div>
+            <div class="d-flex align-items-center gap-1 small">
+              <span class="badge rounded-circle bg-success p-1"><i class="bi bi-house-door-fill"></i></span>
+              <span class="text-muted">Destination:</span>
+              <strong id="legend-dest-name">Delivery Address</strong>
+            </div>
+          </div>
+          <div class="small text-muted" id="gps-permission-notice">
+            <i class="bi bi-shield-check text-success"></i> Live browser GPS continuous sync
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Left: Status Timeline & Action Controls -->
+        <div class="col-lg-7">
+          <!-- Handover Code Card for Delivery (Patient Only) -->
+          <div id="handover-code-container" class="mb-4" style="display: none;">
+            <div class="handover-card">
+              <div class="fw-bold fs-5 mb-1"><i class="bi bi-shield-lock-fill"></i> Delivery Handover Code</div>
+              <div class="small opacity-90 mb-2">Share this 4-digit code with the courier upon receiving your medication package:</div>
+              <div class="handover-code-digits" id="handover-code-digits">----</div>
+              <div class="small opacity-75 mt-1">Protects life-critical chain of custody</div>
+            </div>
+          </div>
+
+          <!-- Status Progression Timeline -->
+          <div class="card app-card shadow-sm p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold text-navy mb-0"><i class="bi bi-activity text-teal"></i> Request Status History</h5>
+              <span class="badge bg-light text-dark border"><i class="bi bi-arrow-repeat text-teal"></i> Live Tracking</span>
+            </div>
+            <div class="timeline-vertical" id="track-timeline-list"></div>
+          </div>
+
+          <!-- Actions: Switch to Pickup / Cancel -->
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <button id="btn-switch-pickup" class="btn btn-warning fw-semibold shadow-sm" style="display: none;" onclick="trackApp.confirmSwitchToPickup()">
+              <i class="bi bi-shop"></i> Switch to Self-Pickup (Free Delivery Fee)
+            </button>
+            <button id="btn-cancel-request" class="btn btn-outline-danger fw-semibold" style="display: none;" onclick="trackApp.promptCancel()">
+              <i class="bi bi-x-octagon"></i> Cancel Request
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Pharmacy, Rider, Medicine Items & Totals -->
+        <div class="col-lg-5">
+          <!-- Pharmacy Details Card -->
+          <div class="card app-card shadow-sm p-3 mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-shop text-primary fs-4"></i>
+              <h6 class="fw-bold mb-0">Dispensing Pharmacy</h6>
+            </div>
+            <div class="fw-semibold text-dark" id="pharmacy-name-disp">-</div>
+            <div class="text-muted small mb-2" id="pharmacy-addr-disp">-</div>
+            <div class="small text-muted mb-3"><i class="bi bi-telephone"></i> <span id="pharmacy-phone-disp">-</span></div>
+            <div class="d-flex gap-2">
+              <a href="tel:9000000033" class="btn btn-sm btn-outline-primary flex-grow-1"><i class="bi bi-telephone-fill"></i> Call</a>
+              <a href="https://wa.me/919000000033" target="_blank" class="btn btn-sm btn-outline-success flex-grow-1"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+              <a href="https://maps.google.com/?q=13.0033,80.2550" target="_blank" class="btn btn-sm btn-outline-secondary flex-grow-1"><i class="bi bi-geo-alt-fill"></i> Navigate</a>
+            </div>
+          </div>
+
+          <!-- Delivery Partner Card -->
+          <div id="delivery-partner-card" class="card app-card shadow-sm p-3 mb-3 border-teal" style="display: none;">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-bicycle text-teal fs-4"></i>
+              <h6 class="fw-bold mb-0">Assigned Courier Partner</h6>
+            </div>
+            <div class="fw-semibold text-dark" id="partner-name-disp">-</div>
+            <div class="text-muted small mb-3"><i class="bi bi-telephone"></i> <span id="partner-phone-disp">-</span></div>
+            <div class="alert alert-info py-1 px-2 small mb-0">Courier will request your 4-digit code at doorstep.</div>
+          </div>
+
+          <!-- Medicine Items & Bill Breakdown -->
+          <div class="card app-card shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold text-navy mb-0"><i class="bi bi-capsule"></i> Requested Medicines</h6>
+              <div id="track-rx-status"></div>
+            </div>
+            <div id="track-items-list" class="mb-3"></div>
+            <button id="btn-view-rx" class="btn btn-sm btn-outline-secondary w-100 mb-3" style="display: none;">
+              <i class="bi bi-file-earmark-medical"></i> View Attached Prescription
+            </button>
+
+            <div class="small text-muted">
+              <div class="d-flex justify-content-between mb-1">
+                <span>Items Subtotal:</span>
+                <span class="fw-semibold" id="track-items-total">₹0.00</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span>Delivery Charge:</span>
+                <span class="fw-semibold" id="track-delivery-fee">₹0.00</span>
+              </div>
+              <div class="d-flex justify-content-between fw-bold text-dark fs-5 pt-2 border-top">
+                <span>Grand Total:</span>
+                <span class="text-danger" id="track-grand-total">₹0.00</span>
+              </div>
+            </div>
+
+            <!-- Payment Button -->
+            <div id="payment-action-card" class="mt-3 pt-3 border-top text-center">
+              <a id="btn-order-checkout" href="#" class="btn btn-teal w-100 py-2 fw-semibold shadow-sm" style="background-color: #0D9488; color: #fff;">
+                <i class="bi bi-credit-card-fill me-1"></i> Proceed to Checkout & Pay
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="mt-auto">
+    <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+      <div>&copy; 2026 EmergencyMed Live Tracking</div>
+      <div class="small text-muted">Module 5 Live Order Monitor</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/notifications.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/assets/js/track.js"></script>
+</body>
+</html>

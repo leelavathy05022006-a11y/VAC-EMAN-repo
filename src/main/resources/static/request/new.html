@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Emergency Request - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/request.css">
+</head>
+<body data-required-role="PATIENT,HOSPITAL,ADMIN">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg app-navbar navbar-dark sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EmergencyMed</span>
+      </a>
+      <div class="collapse navbar-collapse" id="appNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/request/new.html">New Request</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/my-requests.html">My Requests</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/notifications.html" class="nav-link position-relative text-white p-2">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="navbar-notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">0</span>
+          </a>
+          <span id="navbar-user-display" class="text-light small">Asha Raman</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-4">
+    <div class="container" style="max-width: 860px;">
+
+      <!-- Header -->
+      <div class="mb-4">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-danger text-uppercase fw-bold"><span class="pulse-beacon"></span> Module 1</span>
+          <h2 class="fw-bold mb-0 text-navy">Emergency Medicine Request</h2>
+        </div>
+        <p class="text-muted small mb-0">Fill out the four-step requisition form to secure immediate reserve from approved pharmacies.</p>
+      </div>
+
+      <!-- Stepper Indicator -->
+      <div class="stepper-wrapper">
+        <div class="stepper-line"></div>
+        <div class="step-item active" id="step-nav-1">
+          <div class="step-circle">1</div>
+          <div class="step-title">Medicines</div>
+        </div>
+        <div class="step-item" id="step-nav-2">
+          <div class="step-circle">2</div>
+          <div class="step-title">Fulfilment</div>
+        </div>
+        <div class="step-item" id="step-nav-3">
+          <div class="step-circle">3</div>
+          <div class="step-title">Patient Details</div>
+        </div>
+        <div class="step-item" id="step-nav-4">
+          <div class="step-circle">4</div>
+          <div class="step-title">Review & Submit</div>
+        </div>
+      </div>
+
+      <!-- Main Card Container -->
+      <div class="card app-card shadow-sm p-4 mb-4">
+
+        <!-- STEP 1: Medicine Items -->
+        <div id="step-pane-1">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold text-navy mb-0">Step 1: Select Medicine Items</h5>
+              <div class="text-muted small">Apollo Adyar Pharmacy &bull; 1 to 5 distinct medicines allowed</div>
+            </div>
+            <button type="button" class="btn btn-sm btn-teal" onclick="requestWizard.addMedicinePrompt()">
+              <i class="bi bi-plus-lg"></i> Add Another Medicine
+            </button>
+          </div>
+
+          <!-- Items List -->
+          <div id="selected-items-container" class="mb-3"></div>
+
+          <!-- Notice if Rx Required -->
+          <div id="prescription-required-alert" class="alert alert-warning py-2 small d-none" role="alert">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+            One or more items in your selection require a mandatory medical prescription. You will be prompted to upload it in Step 3.
+          </div>
+
+          <div class="p-3 bg-light rounded border mb-4">
+            <div class="d-flex justify-content-between text-muted small mb-1">
+              <span>Items Total:</span>
+              <span class="fw-semibold items-total-disp">₹0.00</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mb-1">
+              <span>Estimated Delivery Fee:</span>
+              <span class="fw-semibold delivery-fee-disp">₹50.00</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold text-dark fs-5 pt-2 border-top">
+              <span>Estimated Grand Total:</span>
+              <span class="text-danger grand-total-disp">₹0.00</span>
+            </div>
+          </div>
+
+          <div class="text-end">
+            <button type="button" class="btn btn-teal px-4 btn-next-step">
+              Proceed to Fulfilment <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Fulfilment -->
+        <div id="step-pane-2" style="display: none;">
+          <h5 class="fw-bold text-navy mb-3">Step 2: Choose Fulfilment Method</h5>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div class="form-check p-3 border rounded h-100 bg-white">
+                <input class="form-check-input ms-0 me-2" type="radio" name="fulfilmentType" id="radio-delivery" value="DELIVERY" checked>
+                <label class="form-check-label fw-bold d-block" for="radio-delivery">
+                  <i class="bi bi-bicycle text-teal"></i> Emergency Delivery
+                </label>
+                <div class="text-muted small mt-1">Dispatched via nearest approved courier. Delivery fee: ₹50.00.</div>
+                <div id="delivery-disabled-notice" class="text-danger small mt-2 fw-semibold" style="display: none;">
+                  <i class="bi bi-x-circle"></i> Delivery is unavailable for this pharmacy. Please choose self-pickup.
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check p-3 border rounded h-100 bg-white">
+                <input class="form-check-input ms-0 me-2" type="radio" name="fulfilmentType" id="radio-pickup" value="SELF_PICKUP">
+                <label class="form-check-label fw-bold d-block" for="radio-pickup">
+                  <i class="bi bi-shop text-primary"></i> Self-Pickup at Pharmacy
+                </label>
+                <div class="text-muted small mt-1">Stock held for 120 minutes. No delivery fee applied. Pay at store.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery Details Section -->
+          <div id="delivery-details-section">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Delivery Address <span class="text-danger">*</span></label>
+              <textarea id="deliveryAddress" class="form-control" rows="2" placeholder="Street address, apartment/flat number, landmarks (min 10 characters)">Flat 4B, Sample Apartments, Adyar, Chennai</textarea>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-5">
+                <label class="form-label small text-muted">Latitude</label>
+                <input id="deliveryLat" type="text" class="form-control form-control-sm" value="13.005000">
+              </div>
+              <div class="col-md-5">
+                <label class="form-label small text-muted">Longitude</label>
+                <input id="deliveryLng" type="text" class="form-control form-control-sm" value="80.255000">
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="btn-use-location">
+                  <i class="bi bi-geo-alt"></i> GPS
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-secondary px-4 btn-prev-step">
+              <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button type="button" class="btn btn-teal px-4 btn-next-step">
+              Proceed to Details <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Patient Details -->
+        <div id="step-pane-3" style="display: none;">
+          <h5 class="fw-bold text-navy mb-3">Step 3: Patient & Clinical Information</h5>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Patient Full Name <span class="text-danger">*</span></label>
+              <input id="patientName" type="text" class="form-control" value="Asha Raman" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Contact Mobile Number <span class="text-danger">*</span></label>
+              <input id="patientPhone" type="tel" class="form-control" value="9000000011" placeholder="10-digit mobile number" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Priority Level <span class="text-danger">*</span></label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priority" id="pri-urgent" value="URGENT" checked>
+                <label class="form-check-label fw-bold text-warning-emphasis" for="pri-urgent">
+                  <i class="bi bi-exclamation-circle-fill"></i> URGENT
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priority" id="pri-critical" value="CRITICAL">
+                <label class="form-check-label fw-bold text-danger" for="pri-critical">
+                  <i class="bi bi-lightning-fill"></i> CRITICAL (Immediate Life-Threatening)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctor details (optional / hospital requests) -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small text-muted">Prescribing Doctor Name (Optional)</label>
+              <input id="doctorName" type="text" class="form-control form-control-sm" placeholder="e.g. Dr. K. S. Rao">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted">Doctor Registration No. (Optional)</label>
+              <input id="doctorRegNo" type="text" class="form-control form-control-sm" placeholder="e.g. MCI-12345">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted">Clinical Notes / Dispatch Instructions</label>
+            <textarea id="notes" class="form-control form-control-sm" rows="2" placeholder="e.g. Patient in respiratory distress, urgent delivery requested."></textarea>
+          </div>
+
+          <!-- Prescription File Upload -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Prescription Upload (JPG, PNG, PDF, max 2 MB)</label>
+            <div class="file-dropzone" onclick="document.getElementById('rx-file-input').click()">
+              <i class="bi bi-file-earmark-medical fs-2 text-teal"></i>
+              <div class="fw-semibold mt-1">Click to select or drop prescription file</div>
+              <div class="text-muted small">Validated and encrypted storage outside web root</div>
+              <input type="file" id="rx-file-input" class="d-none" accept=".jpg,.jpeg,.png,.pdf">
+            </div>
+            <div id="rx-upload-success" class="alert alert-success py-2 mt-2 small" style="display: none;">
+              <i class="bi bi-check-circle-fill"></i> Attached: <span id="rx-filename-disp" class="fw-semibold"></span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-secondary px-4 btn-prev-step">
+              <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button type="button" class="btn btn-teal px-4 btn-next-step">
+              Proceed to Review <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Review -->
+        <div id="step-pane-4" style="display: none;">
+          <h5 class="fw-bold text-navy mb-3">Step 4: Review & Emergency Submission</h5>
+
+          <div id="review-summary-container" class="mb-4"></div>
+
+          <!-- Medical Disclaimer Notice -->
+          <div class="medical-disclaimer mb-4">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-shield-exclamation fs-4"></i>
+              <div>
+                <strong>Important Medical & Legal Disclaimer:</strong><br>
+                This application is an emergency logistics and dispatch facilitation tool. The application does NOT provide medical advice, diagnosis, or clinical prescriptions. The registered pharmacy and licensed pharmacist hold sole responsibility for dispensing verification.
+              </div>
+            </div>
+          </div>
+
+          <!-- Cost Summary -->
+          <div class="p-3 bg-light rounded border mb-4">
+            <div class="d-flex justify-content-between text-muted small mb-1">
+              <span>Items Total:</span>
+              <span class="fw-semibold items-total-disp">₹0.00</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mb-1">
+              <span>Delivery Fee:</span>
+              <span class="fw-semibold delivery-fee-disp">₹50.00</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold text-dark fs-4 pt-2 border-top">
+              <span>Grand Total:</span>
+              <span class="text-danger grand-total-disp">₹0.00</span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <button type="button" class="btn btn-outline-secondary px-4 btn-prev-step">
+              <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button type="button" class="btn btn-emergency btn-lg px-4" id="btn-submit-emergency">
+              <i class="bi bi-lightning-fill"></i> Submit Emergency Request
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <div id="modal-container"></div>
+
+  <footer class="mt-auto">
+    <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+      <div>&copy; 2026 EmergencyMed Requisition System</div>
+      <div class="small text-muted">Module 1 Requisition Flow</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/notifications.js"></script>
+  <script src="/assets/js/request.js"></script>
+</body>
+</html>

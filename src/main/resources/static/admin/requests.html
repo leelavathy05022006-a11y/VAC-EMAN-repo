@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Medicine Requisition Monitoring - EmergencyMed</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <link rel="stylesheet" href="/assets/css/request.css">
+</head>
+<body data-required-role="ADMIN">
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg app-navbar navbar-dark sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand" href="/index.html">
+        <i class="bi bi-hospital text-danger fs-4"></i>
+        <span>EmergencyMed</span>
+        <span class="brand-badge">Admin Suite</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="appNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/index.html"><i class="bi bi-house-door"></i> Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/new.html"><i class="bi bi-plus-circle text-danger"></i> New Request</a></li>
+          <li class="nav-item"><a class="nav-link" href="/request/my-requests.html"><i class="bi bi-clock-history"></i> My Requests</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pharmacy/requests.html"><i class="bi bi-shop"></i> Pharmacy</a></li>
+          <li class="nav-item"><a class="nav-link" href="/delivery/jobs.html"><i class="bi bi-bicycle"></i> Delivery</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/admin/requests.html"><i class="bi bi-shield-lock"></i> Admin Operations</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/notifications.html" class="nav-link position-relative text-white p-2" title="Notifications">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="navbar-notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.7rem;">0</span>
+          </a>
+          <div class="text-light small text-end d-none d-sm-block">
+            <div id="navbar-user-display" class="fw-semibold">System Administrator</div>
+            <div class="text-danger" style="font-size: 0.75rem;">Root Authority</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="py-4">
+    <div class="container-fluid px-lg-4" style="max-width: 1300px;">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-dark text-white text-uppercase fw-bold"><i class="bi bi-shield-lock-fill me-1"></i> Governance</span>
+            <h2 class="fw-bold mb-0 text-navy">Emergency Requisitions Oversight</h2>
+          </div>
+          <p class="text-muted small mb-0">System-wide order lifecycle audit, multi-pharmacy triage monitoring, and emergency intervention.</p>
+        </div>
+        <div>
+          <button class="btn btn-teal btn-sm" onclick="adminApp.loadAll()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Counters by Status -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="card app-card border-warning border-start border-4 p-3 shadow-sm">
+            <div class="text-muted small fw-semibold">PENDING TRIAGE</div>
+            <div class="fs-2 fw-bold text-dark" id="admin-stat-pending">-</div>
+            <div class="small text-warning"><i class="bi bi-hourglass-split"></i> Awaiting Pharmacy</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card app-card border-primary border-start border-4 p-3 shadow-sm">
+            <div class="text-muted small fw-semibold">IN TRANSIT / HOLD</div>
+            <div class="fs-2 fw-bold text-dark" id="admin-stat-inprogress">-</div>
+            <div class="small text-primary"><i class="bi bi-bicycle"></i> Active Fulfillment</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card app-card border-success border-start border-4 p-3 shadow-sm">
+            <div class="text-muted small fw-semibold">SUCCESSFUL DELIVERIES</div>
+            <div class="fs-2 fw-bold text-dark" id="admin-stat-completed">-</div>
+            <div class="small text-success"><i class="bi bi-check2-circle"></i> Handed Over</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card app-card border-secondary border-start border-4 p-3 shadow-sm">
+            <div class="text-muted small fw-semibold">ALL LIFELINES LOGGED</div>
+            <div class="fs-2 fw-bold text-dark" id="admin-stat-total">-</div>
+            <div class="small text-muted"><i class="bi bi-database"></i> Database Entries</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Form Card -->
+      <div class="card app-card shadow-sm mb-4">
+        <div class="card-body p-3">
+          <form id="admin-filters-form" onsubmit="event.preventDefault(); adminApp.applyFilters();" class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Status Filter:</label>
+              <select id="filter-status" class="form-select form-select-sm">
+                <option value="">-- All Statuses --</option>
+                <option value="PENDING">PENDING (Awaiting response)</option>
+                <option value="ACCEPTED">ACCEPTED</option>
+                <option value="FINDING_DELIVERY">FINDING_DELIVERY</option>
+                <option value="DELIVERY_ASSIGNED">DELIVERY_ASSIGNED</option>
+                <option value="READY_FOR_PICKUP">READY_FOR_PICKUP</option>
+                <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="PICKED_UP">PICKED_UP</option>
+                <option value="REJECTED">REJECTED</option>
+                <option value="EXPIRED">EXPIRED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Pharmacy:</label>
+              <select id="filter-pharmacy" class="form-select form-select-sm">
+                <option value="">-- All Pharmacies --</option>
+                <option value="1">Apollo Adyar Pharmacy (#1)</option>
+                <option value="2">CityMeds Pharmacy (#2)</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold mb-1">From Date:</label>
+              <input type="date" id="filter-from" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold mb-1">To Date:</label>
+              <input type="date" id="filter-to" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+              <button type="submit" class="btn btn-sm btn-navy flex-grow-1">
+                <i class="bi bi-funnel-fill"></i> Filter
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.resetFilters()">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Requests Audit Table -->
+      <div class="card app-card shadow-sm mb-4">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase">
+              <tr>
+                <th>Reference Code</th>
+                <th>Requester</th>
+                <th>Pharmacy</th>
+                <th>Fulfilment</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Grand Total</th>
+                <th>Created Timestamp</th>
+                <th class="text-end">Intervention</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body">
+              <tr><td colspan="9" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading requisitions...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-muted small" id="admin-page-info">Showing entries</span>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" id="admin-btn-prev" onclick="adminApp.changePage(-1)" disabled>
+            <i class="bi bi-chevron-left"></i> Previous
+          </button>
+          <button class="btn btn-outline-secondary" id="admin-btn-next" onclick="adminApp.changePage(1)">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="mt-auto">
+    <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+      <div>&copy; 2026 EmergencyMed Administration &bull; Module 4</div>
+      <div class="small text-muted">Complete Transaction Isolation &amp; Audit Trail</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/ui.js"></script>
+  <script src="/assets/js/auth-guard.js"></script>
+  <script src="/assets/js/notifications.js"></script>
+  <script>
+    const adminApp = {
+      currentPage: 0,
+      pageSize: 15,
+
+      init() {
+        this.loadCounters();
+        this.loadRequests();
+      },
+
+      loadAll() {
+        this.loadCounters();
+        this.loadRequests();
+      },
+
+      async loadCounters() {
+        try {
+          const s = await api.get('/api/v1/requests/summary');
+          if (s) {
+            document.getElementById('admin-stat-pending').textContent = s.pending;
+            document.getElementById('admin-stat-inprogress').textContent = s.inProgress;
+            document.getElementById('admin-stat-completed').textContent = s.completed;
+            document.getElementById('admin-stat-total').textContent = s.total;
+          }
+        } catch (e) {
+          console.warn('Failed to load counters', e);
+        }
+      },
+
+      async loadRequests() {
+        const tbody = document.getElementById('admin-table-body');
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>`;
+
+        const params = {
+          page: this.currentPage,
+          size: this.pageSize
+        };
+
+        const status = document.getElementById('filter-status').value;
+        if (status) params.status = status;
+
+        const pharmacyId = document.getElementById('filter-pharmacy').value;
+        if (pharmacyId) params.pharmacyId = pharmacyId;
+
+        const from = document.getElementById('filter-from').value;
+        if (from) params.from = from;
+
+        const to = document.getElementById('filter-to').value;
+        if (to) params.to = to;
+
+        try {
+          const res = await api.get('/api/v1/admin/requests', params);
+          if (!res || !res.content || res.content.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">No emergency requisitions match criteria.</td></tr>`;
+            document.getElementById('admin-page-info').textContent = 'Showing 0 entries';
+            return;
+          }
+
+          tbody.innerHTML = res.content.map(r => `
+            <tr>
+              <td class="fw-bold text-navy">${r.referenceCode}</td>
+              <td>
+                <div class="fw-semibold text-dark">${r.patientName}</div>
+                <span class="badge bg-light text-muted border">${r.requesterType}</span>
+              </td>
+              <td>${r.pharmacyName || ('Pharmacy #' + r.pharmacyId)}</td>
+              <td><span class="badge bg-secondary">${r.fulfilmentType}</span></td>
+              <td>${ui.formatStatusBadge(r.status)}</td>
+              <td>${ui.formatPriorityBadge(r.priority)}</td>
+              <td class="fw-bold">${ui.formatMoney(r.grandTotal)}</td>
+              <td class="small text-muted">${ui.formatDateTime(r.createdAt)}</td>
+              <td class="text-end">
+                <a href="/request/track.html?id=${r.id}" class="btn btn-sm btn-outline-primary me-1" title="Inspect full order timeline">
+                  <i class="bi bi-eye"></i> View
+                </a>
+                ${!['DELIVERED', 'PICKED_UP', 'REJECTED', 'EXPIRED', 'CANCELLED'].includes(r.status) ? `
+                  <button class="btn btn-sm btn-outline-danger" title="Administrative emergency cancellation" onclick="adminApp.cancelOrder(${r.id})">
+                    <i class="bi bi-x-circle"></i> Cancel
+                  </button>
+                ` : ''}
+              </td>
+            </tr>
+          `).join('');
+
+          document.getElementById('admin-page-info').textContent = `Showing page ${res.page + 1} of ${res.totalPages || 1} (${res.totalElements} total entries)`;
+          document.getElementById('admin-btn-prev').disabled = this.currentPage === 0;
+          document.getElementById('admin-btn-next').disabled = this.currentPage >= (res.totalPages - 1);
+        } catch (e) {
+          tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+        }
+      },
+
+      applyFilters() {
+        this.currentPage = 0;
+        this.loadRequests();
+      },
+
+      resetFilters() {
+        document.getElementById('admin-filters-form').reset();
+        this.currentPage = 0;
+        this.loadRequests();
+      },
+
+      changePage(delta) {
+        if (this.currentPage + delta >= 0) {
+          this.currentPage += delta;
+          this.loadRequests();
+        }
+      },
+
+      async cancelOrder(id) {
+        const reason = prompt('Administrative Override: Enter reason for cancelling request (min 5 characters):');
+        if (!reason || reason.trim().length < 5) {
+          ui.toast('Cancellation reason must be at least 5 characters', 'warning');
+          return;
+        }
+
+        ui.showLoading('Executing administrative cancellation...');
+        try {
+          await api.post(`/api/v1/requests/${id}/cancel`, { reason: reason.trim() });
+          ui.hideLoading();
+          ui.toast('Request cancelled administratively. Stock released/restored.', 'success');
+          this.loadCounters();
+          this.loadRequests();
+        } catch (e) {
+          ui.hideLoading();
+          ui.toast('Cancellation failed: ' + e.message, 'danger');
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => adminApp.init());
+  </script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+/* ==============================================================================
+   Module 3: Medicine Search & Availability - Search CSS
+   ============================================================================== */
+
+/* Search Form Section */
+.search-hero {
+  background: linear-gradient(135deg, #102A43 0%, #243B53 100%);
+  color: #FFFFFF;
+  padding: 2.5rem 0 3.5rem 0;
+  position: relative;
+}
+
+.search-hero-title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 2.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-hero-subtitle {
+  color: #94A3B8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.search-card-container {
+  margin-top: -2rem;
+  position: relative;
+  z-index: 10;
+}
+
+.search-box {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+}
+
+/* Typeahead Styles */
+.typeahead-wrapper {
+  position: relative;
+}
+
+.typeahead-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid var(--border-color, #CBD5E1);
+  border-radius: var(--border-radius-sm, 8px);
+  box-shadow: 0 12px 28px rgba(16, 42, 67, 0.15);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 1050;
+  margin-top: 0.35rem;
+  display: none;
+}
+
+.typeahead-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background 0.15s ease, transform 0.1s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.typeahead-item:last-child {
+  border-bottom: none;
+}
+
+.typeahead-item:hover,
+.typeahead-item.active {
+  background-color: #F0FDFA; /* Soft teal tint */
+}
+
+.typeahead-item .med-title {
+  font-weight: 600;
+  color: var(--primary-navy, #102A43);
+  font-size: 0.95rem;
+}
+
+.typeahead-item .med-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748B);
+}
+
+/* Quantity Stepper */
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #FFFFFF;
+}
+
+.qty-btn {
+  background: #F8FAFC;
+  border: none;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.qty-btn:hover {
+  background: #E2E8F0;
+}
+
+.qty-input {
+  border: none;
+  text-align: center;
+  width: 60px;
+  font-weight: 600;
+  color: var(--color-primary);
+  outline: none;
+}
+
+/* Chips */
+.recent-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.recent-chip {
+  background: #E2E8F0;
+  color: #334155;
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.recent-chip:hover {
+  background: #CBD5E1;
+  color: #0F172A;
+}
+
+/* Filter Controls Bar */
+.filter-bar {
+  background: #FFFFFF;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Result Cards */
+.result-card {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #94A3B8;
+}
+
+.result-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.pharmacy-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.pharmacy-address {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.price-tag {
+  text-align: right;
+}
+
+.unit-price {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.total-price {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+/* Meta Details Grid */
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  background: var(--color-surface-muted);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin: 1rem 0;
+}
+
+.meta-item {
+  font-size: 0.82rem;
+}
+
+.meta-label {
+  color: var(--color-text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.meta-val {
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+/* Action Button Toolbar */
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #F1F5F9;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Sticky Compare Tray */
+.compare-tray {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-top: 2px solid var(--color-secondary);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.85rem 1.5rem;
+  z-index: 1040;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.compare-tray.visible {
+  transform: translateY(0);
+}
+
+.compare-tray-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tray-chips {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tray-chip {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.tray-chip .remove-btn {
+  color: #94A3B8;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  line-height: 1;
+}
+
+.tray-chip .remove-btn:hover {
+  color: var(--color-danger);
+}
+
+/* Skeleton Loader */
+.skeleton {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text { height: 16px; margin-bottom: 8px; }
+.skeleton-title { height: 24px; width: 60%; margin-bottom: 12px; }
+.skeleton-badge { height: 22px; width: 80px; display: inline-block; }
+
+/* Modal & Comparison Matrix */
+.table-compare th, .table-compare td {
+  vertical-align: middle;
+  padding: 0.85rem 1rem;
+}
+
+.table-compare .best-value {
+  background-color: var(--color-secondary-light) !important;
+  font-weight: 700;
+  color: var(--color-secondary-hover);
+  border-left: 3px solid var(--color-secondary);
+}
